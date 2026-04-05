@@ -1,6 +1,94 @@
 <resources>
     <string name="app_name">ProjectNeptune</string>
     <string name="app_version">1.0.0</string>
-    <string name="manilla_clam">Manila Clam</string>
-    <string name="manilla_clam_scientific">Venerupis philippinarum</string>
+
+    <!-- Blue Mussel -->
+    <string name="bm_name">Blue Mussel</string>
+    <string name="bm_scientific">Mytilus edulis</string>
+    <string name="bm_description">A common intertidal mollusk with a dark blue or black shell.</string>
+
+    <!-- Butter Clam -->
+    <string name="bc_name">Butter Clam</string>
+    <string name="bc_scientific">Saxidomus gigantea</string>
+    <string name="bc_description">A large, heavy-shelled clam common in the Pacific Northwest. The minimum harvest size for butter clams is 55 mm. If you rebury this species, bury it 25 cm deep in the same hole you found it, with the short side facing down and the long side facing up.</string>
+
+    <!-- California Mussel -->
+    <string name="cm_name">California Mussel</string>
+    <string name="cm_scientific">Mytilus californianus</string>
+    <string name="cm_description">A large mussel found on wave-swept rocky shores.</string>
+
+    <!-- Geoduck -->
+    <string name="g_name">Geoduck</string>
+    <string name="g_scientific">Panopea generosa</string>
+    <string name="g_description">The world\'s largest burrowing clam, known for its long siphon.</string>
+
+    <!-- Horse Clam -->
+    <string name="hc_name">Horse Clam</string>
+    <string name="hc_scientific">Tresus capax</string>
+    <string name="hc_description">A large clam that can weigh up to 4 pounds. Also known as the Pacific Gaper.</string>
+
+    <!-- Littleneck Clam -->
+    <string name="lc_name">Littleneck Clam</string>
+    <string name="lc_scientific">Protothaca staminea</string>
+    <string name="lc_description">A popular edible clam with a round, thick shell. The minimum harvest size for littleneck clams is 35 mm. If you rebury this species, bury it 5 cm deep in the same hole you found it, with the short side facing down and the long side facing up.</string>
+
+    <!-- Manila Clam -->
+    <string name="mc_name">Manila Clam</string>
+    <string name="mc_scientific">Venerupis philippinarum</string>
+    <string name="mc_description">Also known as the Japanese littleneck, it has a distinctive cross-hatched shell pattern. The minimum harvest size for manila clams is 35 mm. If you rebury this species, bury it 5 cm deep in the same hole you found it, with the short side facing down and the long side facing up.</string>
+
+    <!-- Northern Abalone -->
+    <string name="na_name">Northern Abalone</string>
+    <string name="na_scientific">Haliotis kamtschatkana</string>
+    <string name="na_description">A rare and protected species with a beautiful iridescent shell interior. Harvesting of this species is prohibited.</string>
+
+    <!-- Nuttall\'s Cockle -->
+    <string name="nc_name">Nuttall\'s Cockle</string>
+    <string name="nc_scientific">Clinocardium nuttallii</string>
+    <string name="nc_description">A large cockle with prominent radial ribs. If you rebury this species, bury it 5 cm deep in the same hole you found it, with the short side facing down and the long side facing up.</string>
+
+    <!-- Olympia Oyster -->
+    <string name="oo_name">Olympia Oyster</string>
+    <string name="oo_scientific">Ostrea lurida</string>
+    <string name="oo_description">The only oyster native to the Pacific coast of North America. Under the Species at Risk Act, the Olympia Oyster is listed as a species of Special Concern and is illegal to harvest.</string>
+
+    <!-- Pacific Oyster -->
+    <string name="po_name">Pacific Oyster</string>
+    <string name="po_scientific">Magallana gigas</string>
+    <string name="po_description">The most widely farmed oyster in the world. To avoid harvesting the protected Olympia Oyster, only harvest pacific oysters larger than 5 cm in length.</string>
+
+    <!-- Pink Scallop -->
+    <string name="ps_name">Pink Scallop</string>
+    <string name="ps_scientific">Chlamys rubida</string>
+    <string name="ps_description">A small, colorful scallop found in deeper waters.</string>
+
+    <!-- Purple Scallop -->
+    <string name="rs_name">Purple Scallop</string>
+    <string name="rs_scientific">Crassadoma gigantea</string>
+    <string name="rs_description">A scallop species noted for its purple hue at the hinge of the shell interior. Also commonly known as the purple hinged rock scallop.</string>
+
+    <!-- Razor Clam -->
+    <string name="rc_name">Razor Clam</string>
+    <string name="rc_scientific">Siliqua patula</string>
+    <string name="rc_description">An oblong clam found on sandy beaches, known for its speed burrowing.</string>
+
+    <!-- Softshell Clam -->
+    <string name="sc_name">Softshell Clam</string>
+    <string name="sc_scientific">Mya arenaria</string>
+    <string name="sc_description">Known for its thin, fragile shell and long siphon.</string>
+
+    <!-- Spiny Scallop -->
+    <string name="ss_name">Spiny Scallop</string>
+    <string name="ss_scientific">Chlamys hastata</string>
+    <string name="ss_description">A scallop with distinctive spines or ribs on its shell.</string>
+
+    <!-- Varnish Clam -->
+    <string name="vc_name">Varnish Clam</string>
+    <string name="vc_scientific">Nuttallia obscurata</string>
+    <string name="vc_description">An invasive species with a thin, dark brown periostracum resembling varnish.</string>
+
+    <!-- Weathervane Scallop -->
+    <string name="ws_name">Weathervane Scallop</string>
+    <string name="ws_scientific">Patinopecten caurinus</string>
+    <string name="ws_description">The largest scallop species in the world, found in the North Pacific.</string>
 </resources>

@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base application theme. -->
+    <style name="Theme.ProjectNeptune" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Optional: set the splash screen attributes -->
+    </style>
 
-    <style name="Theme.ProjectNeptune" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Splash screen theme. -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- The background of the splash screen. -->
+        <item name="windowSplashScreenBackground">#35BEE8</item>
+        <!-- The icon of the splash screen. Pointing to your new logo mipmap. -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/logo</item>
+        <!-- The duration the splash screen is displayed. -->
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <!-- The theme to switch to after the splash screen is done. -->
+        <item name="postSplashScreenTheme">@style/Theme.ProjectNeptune</item>
+    </style>
 </resources>

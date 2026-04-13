@@ -614,6 +614,24 @@ class MapRepository(private val context: Context) {
         }
     }
 
+    suspend fun getNearestPlaceName(latitude: Double, longitude: Double): String? {
+        val allFeatures = _features.value
+        if (allFeatures.isEmpty()) return null
+        
+        val userPoint = GeometryEngine.projectOrNull(
+            com.arcgismaps.geometry.Point(longitude, latitude, SpatialReference.wgs84()),
+            SpatialReference.webMercator()
+        ) as? com.arcgismaps.geometry.Point ?: return null
+        
+        return allFeatures.minByOrNull { feat ->
+            val centerX = (feat.minX + feat.maxX) / 2.0
+            val centerY = (feat.minY + feat.maxY) / 2.0
+            val dx = userPoint.x - centerX
+            val dy = userPoint.y - centerY
+            dx * dx + dy * dy
+        }?.placeNameEn
+    }
+
     private fun parseRawJson(reader: JsonReader): String {
         val sb = StringBuilder()
         fun recursive(r: JsonReader) {

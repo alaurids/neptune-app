@@ -74,6 +74,8 @@ fun ProjectNeptuneApp(cameraExecutor: ExecutorService? = null) {
     val mapRepository = remember { MapRepository(context) }
     val appScope = rememberCoroutineScope()
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.REFERENCE_GUIDE) }
+    var isTrackingCatch by rememberSaveable { mutableStateOf(false) }
+    var initialSpecies by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         // Initial sync
@@ -99,27 +101,62 @@ fun ProjectNeptuneApp(cameraExecutor: ExecutorService? = null) {
                         }
                     },
                     label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
+                    selected = it == currentDestination && !isTrackingCatch,
+                    onClick = { 
+                        currentDestination = it
+                        isTrackingCatch = false
+                        initialSpecies = ""
+                    }
                 )
             }
         }
     ) {
-        when (currentDestination) {
-            AppDestinations.CAMERA -> CameraDestination(cameraExecutor!!)
-            AppDestinations.CATCH_LOG -> CatchLogDestination()
-            AppDestinations.MAP -> MapDestination(
-                repository = mapRepository
-            )
-            AppDestinations.REFERENCE_GUIDE -> ReferenceGuideDestination()
-            AppDestinations.SETTINGS -> SettingsDestination(
+        if (isTrackingCatch) {
+            CatchTracking(
                 repository = mapRepository,
-                onForceSync = {
-                    appScope.launch {
-                        mapRepository.fetchAndCacheLayer20Data(force = true)
-                    }
+                initialSpecies = initialSpecies,
+                onBackClick = { 
+                    isTrackingCatch = false
+                    initialSpecies = ""
+                },
+                onSubmitClick = { 
+                    isTrackingCatch = false
+                    initialSpecies = ""
+                },
+                onCameraClick = {
+                    currentDestination = AppDestinations.CAMERA
+                    isTrackingCatch = false
+                    initialSpecies = ""
                 }
             )
+        } else {
+            when (currentDestination) {
+                AppDestinations.CAMERA -> CameraDestination(
+                    cameraExecutor!!,
+                    onSpeciesDetected = { species ->
+                        initialSpecies = species
+                        isTrackingCatch = true
+                    }
+                )
+                AppDestinations.CATCH_LOG -> CatchLogDestination(
+                    onAddClick = { 
+                        initialSpecies = ""
+                        isTrackingCatch = true
+                    }
+                )
+                AppDestinations.MAP -> MapDestination(
+                    repository = mapRepository
+                )
+                AppDestinations.REFERENCE_GUIDE -> ReferenceGuideDestination()
+                AppDestinations.SETTINGS -> SettingsDestination(
+                    repository = mapRepository,
+                    onForceSync = {
+                        appScope.launch {
+                            mapRepository.fetchAndCacheLayer20Data(force = true)
+                        }
+                    }
+                )
+            }
         }
     }
 }

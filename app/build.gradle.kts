@@ -13,16 +13,21 @@ android {
     defaultConfig {
         applicationId = "com.example.projectneptune"
         minSdk = 28
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Only bundle common architectures to save space
+        ndk {
+            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true // Enable shrinking for release
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -49,7 +54,7 @@ android {
     }
     packaging {
         jniLibs {
-            useLegacyPackaging = true
+            useLegacyPackaging = false
         }
     }
 }
@@ -85,6 +90,7 @@ dependencies {
     // ArcGIS Maps SDK for Kotlin
     implementation(libs.arcgis.maps.kotlin)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation(libs.play.services.location)
 
     // Room
     implementation(libs.androidx.room.runtime)

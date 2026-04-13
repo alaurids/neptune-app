@@ -58,6 +58,7 @@ import java.util.concurrent.ExecutorService
 @Composable
 fun CameraDestination(
     cameraExecutor: ExecutorService,
+    onSpeciesDetected: (String) -> Unit,
     modifier: Modifier = Modifier
 ){
     val context = LocalContext.current
@@ -84,7 +85,7 @@ fun CameraDestination(
     }
 
     if (hasCameraPermission) {
-        CameraPreview(cameraExecutor, modifier)
+        CameraPreview(cameraExecutor, onSpeciesDetected, modifier)
     } else {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Camera permission is required to use this feature.")
@@ -95,11 +96,11 @@ fun CameraDestination(
 @Composable
 fun CameraPreview(
     cameraExecutor: ExecutorService,
+    onSpeciesDetected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val scope = rememberCoroutineScope()
     val previewView = remember { PreviewView(context) }
     val imageCapture: ImageCapture = remember {
         ImageCapture.Builder()
@@ -109,8 +110,6 @@ fun CameraPreview(
 
     var capturedFile by remember { mutableStateOf<File?>(null) }
     var isCropping by remember { mutableStateOf(false) }
-    var isIdentifying by remember { mutableStateOf(false) }
-    var detectionResult by remember { mutableStateOf<String?>(null) }
 
     // Use a single effect to manage camera binding/unbinding. 
     // This unbinds the camera when a photo is being reviewed or cropped.
@@ -180,61 +179,21 @@ fun CameraPreview(
                 file = capturedFile!!,
                 onCrop = {
                     isCropping = true
-                    detectionResult = null
                 },
-                onDetect = {
-                    scope.launch {
-                        isIdentifying = true
-                        detectionResult = detectSpecies(context, capturedFile!!)
-                        isIdentifying = false
+                onConfirmDetection = { result ->
+                    // Expected format: "Detected: Blue Mussel, California Mussel" or "No species detected."
+                    val species = if (result.startsWith("Detected: ")) {
+                        result.removePrefix("Detected: ").split(", ").firstOrNull() ?: ""
+                    } else {
+                        ""
                     }
+                    onSpeciesDetected(species)
                 },
                 onDiscard = {
                     capturedFile?.delete()
                     capturedFile = null
-                    detectionResult = null
                 }
             )
-            
-            detectionResult?.let { result ->
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 64.dp),
-                    shape = RectangleShape,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shadowElevation = 4.dp
-                ) {
-                    Text(
-                        text = result,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-        if (isIdentifying) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.6f))
-                    .pointerInput(Unit) {}, // Block touches during detection
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = Color.White)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "Identifying...",
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
         }
     }
 }
@@ -354,12 +313,16 @@ fun CropScreen(
 fun PhotoReviewScreen(
     file: File,
     onCrop: () -> Unit,
-    onDetect: () -> Unit,
+    onConfirmDetection: (String) -> Unit = {},
     onDiscard: () -> Unit
 ) {
     val bitmap = remember(file) {
         rotateBitmapIfRequired(file)
     }
+    var detectionResult by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var isIdentifying by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         bitmap?.let {
@@ -369,6 +332,35 @@ fun PhotoReviewScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit
             )
+        }
+
+        if (detectionResult != null) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 64.dp),
+                shape = RectangleShape,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shadowElevation = 4.dp
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = detectionResult!!,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (detectionResult!!.startsWith("Detected: ")) {
+                        Button(
+                            onClick = { onConfirmDetection(detectionResult!!) },
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            Text("Log this catch")
+                        }
+                    }
+                }
+            }
         }
 
         Row(
@@ -390,8 +382,35 @@ fun PhotoReviewScreen(
             ) {
                 Text("Crop")
             }
-            Button(onClick = { onDetect() }) {
+            Button(onClick = {
+                scope.launch {
+                    isIdentifying = true
+                    detectionResult = detectSpecies(context, file)
+                    isIdentifying = false
+                }
+            }) {
                 Text("Detect")
+            }
+        }
+
+        if (isIdentifying) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .pointerInput(Unit) {},
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(color = Color.White)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Identifying...",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

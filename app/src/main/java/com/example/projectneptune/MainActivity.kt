@@ -16,6 +16,7 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -76,6 +77,10 @@ fun ProjectNeptuneApp(cameraExecutor: ExecutorService? = null) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.REFERENCE_GUIDE) }
     var isTrackingCatch by rememberSaveable { mutableStateOf(false) }
     var initialSpecies by rememberSaveable { mutableStateOf("") }
+    var editingEntryId by rememberSaveable { mutableIntStateOf(0) }
+    var initialQuantity by rememberSaveable { mutableStateOf("") }
+    var initialTime by rememberSaveable { mutableStateOf("") }
+    var initialLocation by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         // Initial sync
@@ -115,18 +120,31 @@ fun ProjectNeptuneApp(cameraExecutor: ExecutorService? = null) {
             CatchTracking(
                 repository = mapRepository,
                 initialSpecies = initialSpecies,
+                initialQuantity = initialQuantity,
+                initialTime = initialTime,
+                initialLocation = initialLocation,
+                entryId = editingEntryId,
                 onBackClick = { 
                     isTrackingCatch = false
                     initialSpecies = ""
+                    editingEntryId = 0
+                    initialQuantity = ""
+                    initialTime = ""
+                    initialLocation = ""
                 },
                 onSubmitClick = { 
                     isTrackingCatch = false
                     initialSpecies = ""
+                    editingEntryId = 0
+                    initialQuantity = ""
+                    initialTime = ""
+                    initialLocation = ""
                 },
                 onCameraClick = {
                     currentDestination = AppDestinations.CAMERA
                     isTrackingCatch = false
                     initialSpecies = ""
+                    editingEntryId = 0
                 }
             )
         } else {
@@ -135,12 +153,29 @@ fun ProjectNeptuneApp(cameraExecutor: ExecutorService? = null) {
                     cameraExecutor!!,
                     onSpeciesDetected = { species ->
                         initialSpecies = species
+                        initialQuantity = ""
+                        initialTime = ""
+                        initialLocation = ""
+                        editingEntryId = 0
                         isTrackingCatch = true
                     }
                 )
                 AppDestinations.CATCH_LOG -> CatchLogDestination(
+                    repository = mapRepository,
                     onAddClick = { 
                         initialSpecies = ""
+                        initialQuantity = ""
+                        initialTime = ""
+                        initialLocation = ""
+                        editingEntryId = 0
+                        isTrackingCatch = true
+                    },
+                    onEditClick = { entry ->
+                        initialSpecies = entry.species
+                        initialQuantity = entry.quantity
+                        initialTime = entry.time
+                        initialLocation = entry.location
+                        editingEntryId = entry.id
                         isTrackingCatch = true
                     }
                 )

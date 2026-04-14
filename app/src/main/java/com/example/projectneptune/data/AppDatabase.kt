@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Layer20Feature::class, Station::class, TideData::class, StaticBoundary::class, CatchLimit::class, AppMetadata::class], version = 9, exportSchema = false)
+@Database(entities = [Layer20Feature::class, Station::class, TideData::class, StaticBoundary::class, CatchLimit::class, AppMetadata::class, CatchEntry::class], version = 10, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun mapDao(): MapDao
 

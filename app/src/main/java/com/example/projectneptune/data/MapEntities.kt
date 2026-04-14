@@ -102,3 +102,13 @@ data class AppMetadata(
     @PrimaryKey val key: String,
     val value: String
 )
+
+@Entity(tableName = "catch_entries")
+data class CatchEntry(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val species: String,
+    val quantity: String,
+    val time: String,
+    val location: String,
+    val timestamp: Long = System.currentTimeMillis()
+)

@@ -63,4 +63,13 @@ interface MapDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMetadata(metadata: AppMetadata)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCatchEntry(entry: CatchEntry)
+
+    @Query("SELECT * FROM catch_entries ORDER BY timestamp DESC")
+    suspend fun getAllCatchEntries(): List<CatchEntry>
+
+    @Query("DELETE FROM catch_entries WHERE id = :id")
+    suspend fun deleteCatchEntry(id: Int)
 }

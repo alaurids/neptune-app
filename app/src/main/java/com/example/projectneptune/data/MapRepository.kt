@@ -33,6 +33,9 @@ class MapRepository(private val context: Context) {
     private val db = AppDatabase.getDatabase(context)
     private val mapDao = db.mapDao()
 
+    private val _catchEntries = MutableStateFlow<List<CatchEntry>>(emptyList())
+    val catchEntries: StateFlow<List<CatchEntry>> = _catchEntries.asStateFlow()
+
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _isSyncing = MutableStateFlow(false)
@@ -74,6 +77,7 @@ class MapRepository(private val context: Context) {
         _features.value = mapDao.getAllLayer20Features()
         _stations.value = mapDao.getAllStations()
         _staticBoundaries.value = mapDao.getAllStaticBoundaries()
+        _catchEntries.value = mapDao.getAllCatchEntries()
         Log.d("MapPerformance", "Loaded local data in ${System.currentTimeMillis() - startTime}ms")
     }
 
@@ -528,6 +532,23 @@ class MapRepository(private val context: Context) {
         return if (file.exists()) file.delete() else false
     }
 
+    suspend fun upsertCatchEntry(species: String, quantity: String, time: String, location: String, id: Int = 0) {
+        val entry = CatchEntry(
+            id = if (id == 0) 0 else id,
+            species = species,
+            quantity = quantity,
+            time = time,
+            location = location
+        )
+        mapDao.insertCatchEntry(entry)
+        _catchEntries.value = mapDao.getAllCatchEntries()
+    }
+
+    suspend fun deleteCatchEntry(id: Int) {
+        mapDao.deleteCatchEntry(id)
+        _catchEntries.value = mapDao.getAllCatchEntries()
+    }
+
     /**
      * Starts the basemap download in a background scope that persists even if the UI is dismissed.
      */
@@ -614,23 +635,6 @@ class MapRepository(private val context: Context) {
         }
     }
 
-    suspend fun getNearestPlaceName(latitude: Double, longitude: Double): String? {
-        val allFeatures = _features.value
-        if (allFeatures.isEmpty()) return null
-        
-        val userPoint = GeometryEngine.projectOrNull(
-            com.arcgismaps.geometry.Point(longitude, latitude, SpatialReference.wgs84()),
-            SpatialReference.webMercator()
-        ) as? com.arcgismaps.geometry.Point ?: return null
-        
-        return allFeatures.minByOrNull { feat ->
-            val centerX = (feat.minX + feat.maxX) / 2.0
-            val centerY = (feat.minY + feat.maxY) / 2.0
-            val dx = userPoint.x - centerX
-            val dy = userPoint.y - centerY
-            dx * dx + dy * dy
-        }?.placeNameEn
-    }
 
     private fun parseRawJson(reader: JsonReader): String {
         val sb = StringBuilder()

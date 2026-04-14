@@ -6,51 +6,35 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-/**
- * Data model for a catch entry as shown in the wireframe.
- */
-data class CatchLogEntry(
-    val species: String,
-    val count: Int,
-    val area: String,
-    val time: String,
-    val date: String
-)
+import com.example.projectneptune.data.CatchEntry
+import com.example.projectneptune.data.MapRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatchLogDestination(
+    repository: MapRepository,
     onAddClick: () -> Unit,
+    onEditClick: (CatchEntry) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Mock data based on the wireframe
-    val entries = listOf(
-        CatchLogEntry("Pacific Oyster", 3, "Area 17-1", "11:38 AM", "November 11, 2025"),
-        CatchLogEntry("Butter Clam", 5, "Area 17-1", "11:36 AM", "November 11, 2025"),
-        CatchLogEntry("Pacific Oyster", 7, "Area 16-3", "5:31 PM", "November 6, 2025"),
-        CatchLogEntry("Manila Clam", 2, "Area 17-1", "11:15 AM", "October 25, 2025"),
-        CatchLogEntry("Butter Clam", 6, "Area 17-1", "11:12 AM", "October 25, 2025"),
-        CatchLogEntry("Littleneck Clam", 10, "Area 15-2", "2:45 PM", "October 20, 2025"),
-        CatchLogEntry("Pacific Oyster", 4, "Area 17-1", "9:20 AM", "October 20, 2025"),
-        CatchLogEntry("Geoduck", 1, "Area 18-4", "4:15 PM", "October 12, 2025"),
-        CatchLogEntry("Dungeness Crab", 2, "Area 18-1", "2:00 PM", "October 5, 2025"),
-        CatchLogEntry("Pacific Oyster", 8, "Area 17-1", "10:15 AM", "October 5, 2025"),
-    )
+    val entries by repository.catchEntries.collectAsState()
 
-    // Group entries by date for headers
-    val groupedEntries = entries.groupBy { it.date }
+    // Group entries by a human-readable date if possible, or just use the raw string
+    // For simplicity, we'll extract the date part from the "time" field (e.g., "MM/dd/yyyy")
+    val groupedEntries = entries.groupBy { entry ->
+        entry.time.split(" ").firstOrNull() ?: "Unknown Date"
+    }
 
     Scaffold(
         topBar = {
@@ -60,11 +44,6 @@ fun CatchLogDestination(
                         text = "Catch Log", 
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
                     ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = { /* Handle back */ }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color.White
@@ -123,7 +102,13 @@ fun CatchLogDestination(
                     }
                 }
                 items(logs) { log ->
-                    CatchCard(log)
+                    CatchCard(
+                        log = log,
+                        onEdit = { onEditClick(log) },
+                        onDelete = {
+                            // Optional: delete logic
+                        }
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
             }
@@ -134,7 +119,11 @@ fun CatchLogDestination(
 }
 
 @Composable
-fun CatchCard(log: CatchLogEntry) {
+fun CatchCard(
+    log: CatchEntry,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {}
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -146,14 +135,14 @@ fun CatchCard(log: CatchLogEntry) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "${log.species} x${log.count}",
+                text = "${log.species} x${log.quantity}",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp
                 )
             )
             Text(
-                text = log.area,
+                text = log.location,
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Black
             )
@@ -168,7 +157,7 @@ fun CatchCard(log: CatchLogEntry) {
                 contentAlignment = Alignment.BottomEnd
             ) {
                 TextButton(
-                    onClick = { /* Edit logic */ },
+                    onClick = onEdit,
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(

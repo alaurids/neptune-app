@@ -34,12 +34,12 @@ data class ShellfishSpecies(
 )
 
 private data class ShellfishCategory(
-    val title: String,
+    @StringRes val titleRes: Int,
     val species: List<ShellfishSpecies>
 )
 
 private val categorizedShellfish = listOf(
-    ShellfishCategory("Clams", listOf(
+    ShellfishCategory(R.string.clams, listOf(
         ShellfishSpecies(R.mipmap.bc_foreground, R.string.bc_name, R.string.bc_scientific, R.string.bc_description),
         ShellfishSpecies(R.mipmap.g_foreground, R.string.g_name, R.string.g_scientific, R.string.g_description),
         ShellfishSpecies(R.mipmap.hc_foreground, R.string.hc_name, R.string.hc_scientific, R.string.hc_description),
@@ -49,24 +49,24 @@ private val categorizedShellfish = listOf(
         ShellfishSpecies(R.mipmap.sc_foreground, R.string.sc_name, R.string.sc_scientific, R.string.sc_description),
         ShellfishSpecies(R.mipmap.vc_foreground, R.string.vc_name, R.string.vc_scientific, R.string.vc_description)
     )),
-    ShellfishCategory("Cockles", listOf(
+    ShellfishCategory(R.string.cockles, listOf(
         ShellfishSpecies(R.mipmap.nc_foreground, R.string.nc_name, R.string.nc_scientific, R.string.nc_description)
     )),
-    ShellfishCategory("Mussels", listOf(
+    ShellfishCategory(R.string.mussels, listOf(
         ShellfishSpecies(R.mipmap.bm_foreground, R.string.bm_name, R.string.bm_scientific, R.string.bm_description),
         ShellfishSpecies(R.mipmap.cm_foreground, R.string.cm_name, R.string.cm_scientific, R.string.cm_description)
     )),
-    ShellfishCategory("Oysters", listOf(
+    ShellfishCategory(R.string.oysters, listOf(
         ShellfishSpecies(R.mipmap.po_foreground, R.string.po_name, R.string.po_scientific, R.string.po_description),
         ShellfishSpecies(R.mipmap.oo_foreground, R.string.oo_name, R.string.oo_scientific, R.string.oo_description)
     )),
-    ShellfishCategory("Scallops", listOf(
+    ShellfishCategory(R.string.scallops, listOf(
         ShellfishSpecies(R.mipmap.ps_foreground, R.string.ps_name, R.string.ps_scientific, R.string.ps_description),
         ShellfishSpecies(R.mipmap.ss_foreground, R.string.ss_name, R.string.ss_scientific, R.string.ss_description),
         ShellfishSpecies(R.mipmap.rs_foreground, R.string.rs_name, R.string.rs_scientific, R.string.rs_description),
         ShellfishSpecies(R.mipmap.ws_foreground, R.string.ws_name, R.string.ws_scientific, R.string.ws_description)
     )),
-    ShellfishCategory("Abalones", listOf(
+    ShellfishCategory(R.string.abalones, listOf(
         ShellfishSpecies(R.mipmap.na_foreground, R.string.na_name, R.string.na_scientific, R.string.na_description)
     ))
 )
@@ -175,7 +175,7 @@ fun ReferenceGrid(
         categorizedShellfish.forEach { category ->
             item {
                 Text(
-                    text = category.title,
+                    text = stringResource(category.titleRes),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,

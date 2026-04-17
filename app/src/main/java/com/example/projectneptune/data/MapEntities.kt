@@ -2,6 +2,11 @@ package com.example.projectneptune.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.util.Date
+import java.util.TimeZone
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.Calendar
 
 @Entity(tableName = "layer_20_features")
 data class Layer20Feature(
@@ -57,10 +62,23 @@ data class Station(
 data class TideData(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val stationId: String,
-    val dateLabel: String, // e.g., "Oct 12"
-    val timeLabel: String, // e.g., "14:30"
+    val timestamp: Long, // Store as UTC timestamp
     val value: Double
-)
+) {
+    fun getDateLabel(locale: Locale = Locale.getDefault()): String {
+        val sdf = SimpleDateFormat("MMM d", locale).apply { 
+            timeZone = TimeZone.getTimeZone("America/Los_Angeles") 
+        }
+        return sdf.format(Date(timestamp))
+    }
+
+    fun getTimeLabel(locale: Locale = Locale.getDefault()): String {
+        val sdf = SimpleDateFormat("HH:mm", locale).apply { 
+            timeZone = TimeZone.getTimeZone("America/Los_Angeles") 
+        }
+        return sdf.format(Date(timestamp))
+    }
+}
 
 @Entity(tableName = "static_boundaries")
 data class StaticBoundary(

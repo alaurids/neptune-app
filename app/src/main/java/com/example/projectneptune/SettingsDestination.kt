@@ -1,7 +1,10 @@
 package com.example.projectneptune
 
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
@@ -9,12 +12,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arcgismaps.Color
@@ -29,7 +34,6 @@ import com.arcgismaps.mapping.view.GraphicsOverlay
 import com.arcgismaps.mapping.view.MapView
 import com.example.projectneptune.data.AppDatabase
 import com.example.projectneptune.data.MapRepository
-import com.example.projectneptune.isInternetAvailable
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -44,9 +48,14 @@ fun SettingsDestination(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     
+    val neverStr = stringResource(R.string.never)
+    val offlineDownloadAttempt = stringResource(R.string.offlineDownloadAttempt)
+    val offlineSyncAttempt = stringResource(R.string.offlineSyncAttempt)
+
     // Use the shared repository's syncing state
     val isSyncing by repository.isSyncing.collectAsStateWithLifecycle()
-    var lastUpdated by remember { mutableStateOf("Loading...") }
+    val initialLoading = stringResource(R.string.loading)
+    var lastUpdated by remember { mutableStateOf(initialLoading) }
     var offlineSize by remember { mutableStateOf("0 MB") }
     
     var tideDays by remember { mutableFloatStateOf(7f) }
@@ -69,7 +78,7 @@ fun SettingsDestination(
     LaunchedEffect(isSyncing) {
         if (!isSyncing) {
             val db = AppDatabase.getDatabase(context)
-            val timestamp = db.mapDao().getMetadata("last_updated") ?: "Never"
+            val timestamp = db.mapDao().getMetadata("last_updated") ?: neverStr
             lastUpdated = timestamp
             tideDays = repository.getTideDownloadDays().toFloat()
             offlineSize = repository.getOfflineBasemapSize()
@@ -83,7 +92,6 @@ fun SettingsDestination(
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 if (isSelectingArea && !isDownloading) {
                     SelectionMapView(
-                        repository = repository,
                         onCancel = { isSelectingArea = false },
                         onDownload = { envelope ->
                             if (isInternetAvailable(context)) {
@@ -91,7 +99,7 @@ fun SettingsDestination(
                                 isSelectingArea = false
                             } else {
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("You are offline. Please connect to the internet to download the map.")
+                                    snackbarHostState.showSnackbar(offlineDownloadAttempt)
                                 }
                             }
                         }
@@ -111,12 +119,12 @@ fun SettingsDestination(
                             CircularProgressIndicator(modifier = Modifier.size(64.dp))
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
-                                "Downloading Basemap...",
+                                stringResource(R.string.downloadingBasemap),
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "You can leave this screen; the download will continue.",
+                                stringResource(R.string.youCanLeave),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.padding(top = 8.dp)
@@ -140,7 +148,7 @@ fun SettingsDestination(
                             OutlinedButton(
                                 onClick = { repository.cancelBasemapDownload() }
                             ) {
-                                Text("Cancel Download")
+                                Text(stringResource(R.string.cancelDownload))
                             }
                         }
                     }
@@ -154,7 +162,7 @@ fun SettingsDestination(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Settings",
+                    text = stringResource(R.string.settings_label),
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -162,8 +170,60 @@ fun SettingsDestination(
                 HorizontalDivider()
 
                 Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                    // Language Selection
                     Text(
-                        text = "Map Data",
+                        text = stringResource(R.string.language_settings),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    val languages = listOf(
+                        "en" to stringResource(R.string.english),
+                        "fr" to stringResource(R.string.french)
+                    )
+                    
+                    val currentLanguage = AppCompatDelegate.getApplicationLocales().toLanguageTags().ifEmpty { "en" }
+                    
+                    Column(Modifier.selectableGroup().padding(top = 8.dp)) {
+                        languages.forEach { (tag, label) ->
+                            val isSelected = if (tag == "en") {
+                                currentLanguage.startsWith("en") || currentLanguage.isEmpty()
+                            } else {
+                                currentLanguage.startsWith(tag)
+                            }
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                                    .selectable(
+                                        selected = isSelected,
+                                        onClick = {
+                                            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(tag)
+                                            AppCompatDelegate.setApplicationLocales(appLocale)
+                                        },
+                                        role = Role.RadioButton
+                                    )
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = isSelected,
+                                    onClick = null
+                                )
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(start = 16.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = stringResource(R.string.mapData),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -172,12 +232,12 @@ fun SettingsDestination(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = "Last synchronized: $lastUpdated",
+                        text = stringResource(R.string.lastSync) + " $lastUpdated",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     
                     Text(
-                        text = "Data is automatically updated every hour when the app is open with an internet connection.",
+                        text = stringResource(R.string.dataInfo),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.outline,
                         modifier = Modifier.padding(top = 4.dp)
@@ -186,14 +246,14 @@ fun SettingsDestination(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Tide Forecast Duration",
+                        text = stringResource(R.string.tideForecastDuration),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                     
                     Text(
-                        text = "Download tides for the next ${tideDays.roundToInt()} days.",
+                        text = stringResource(R.string.tideDur1) + " ${tideDays.roundToInt()} " + stringResource(R.string.tideDur2),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(top = 4.dp)
                     )
@@ -219,7 +279,7 @@ fun SettingsDestination(
                                 onForceSync()
                             } else {
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("You are offline. Please connect to the internet to sync map data.")
+                                    snackbarHostState.showSnackbar(offlineSyncAttempt)
                                 }
                             }
                         },
@@ -234,25 +294,25 @@ fun SettingsDestination(
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text("Syncing...")
+                            Text(stringResource(R.string.syncing))
                         } else {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Sync Map Data Now")
+                            Text(stringResource(R.string.syncNow))
                         }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Offline Basemap",
+                        text = stringResource(R.string.offlineBasemap),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
 
                     Text(
-                        text = "Downloaded: $offlineSize",
+                        text = stringResource(R.string.downloaded) + " $offlineSize",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(top = 4.dp)
                     )
@@ -264,13 +324,13 @@ fun SettingsDestination(
                                     isSelectingArea = true
                                 } else {
                                     scope.launch {
-                                        snackbarHostState.showSnackbar("You are offline. Please connect to the internet to download a basemap.")
+                                        snackbarHostState.showSnackbar(offlineDownloadAttempt)
                                     }
                                 }
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Download Area")
+                            Text(stringResource(R.string.downloadArea))
                         }
                         OutlinedButton(
                             onClick = {
@@ -280,7 +340,7 @@ fun SettingsDestination(
                             modifier = Modifier.weight(1f),
                             enabled = repository.hasOfflineBasemap()
                         ) {
-                            Text("Clear Offline")
+                            Text(stringResource(R.string.clearOffline))
                         }
                     }
                 }
@@ -292,7 +352,6 @@ fun SettingsDestination(
 
 @Composable
 fun SelectionMapView(
-    repository: MapRepository,
     onCancel: () -> Unit,
     onDownload: (com.arcgismaps.geometry.Envelope) -> Unit
 ) {
@@ -335,9 +394,9 @@ fun SelectionMapView(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onCancel) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-                Text("Select Download Area", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.selectDownloadArea), style = MaterialTheme.typography.titleLarge)
             }
         }
 
@@ -358,9 +417,9 @@ fun SelectionMapView(
                 modifier = Modifier.padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Adjust Map Area", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.selectDownloadArea), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "The area visible above will be downloaded for offline use.",
+                    stringResource(R.string.areaVisible),
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center
                 )
@@ -373,7 +432,7 @@ fun SelectionMapView(
                         onClick = onCancel,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                     Button(
                         onClick = {
@@ -381,7 +440,7 @@ fun SelectionMapView(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Download")
+                        Text(stringResource(R.string.download))
                     }
                 }
             }

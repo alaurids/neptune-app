@@ -24,8 +24,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -366,9 +368,9 @@ fun MapDestination(
             AlertDialog(
                 onDismissRequest = { showOfflineAlert = false },
                 icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                title = { Text("Offline: No Map Data") },
-                text = { Text("Regulation areas haven't been downloaded yet. Please connect to internet to sync.", textAlign = TextAlign.Center) },
-                confirmButton = { Button(onClick = { showOfflineAlert = false }) { Text("I Understand") } }
+                title = { Text(stringResource(R.string.offlineNoMapData1)) },
+                text = { Text(stringResource(R.string.offlineNoMapData2), textAlign = TextAlign.Center) },
+                confirmButton = { Button(onClick = { showOfflineAlert = false }) { Text("OK") } }
             )
         }
     }
@@ -400,32 +402,55 @@ private fun getSpeciesStatus(feature: Layer20Feature, speciesName: String): Int 
 
 @Composable
 fun SpeciesFilterPage(selectedSpecies: Set<String>, fullSpeciesList: List<String>, onSpeciesToggle: (String) -> Unit, onBack: () -> Unit) {
-    val displayNames = remember {
+    val butterClamStr = stringResource(R.string.bc_name)
+    val geoduckStr = stringResource(R.string.g_name)
+    val horseClamStr = stringResource(R.string.hc_name)
+    val littleneckClamStr = stringResource(R.string.lc_name)
+    val manilaClamStr = stringResource(R.string.mc_name)
+    val nuttallsCockleStr = stringResource(R.string.nc_name)
+    val razorClamStr = stringResource(R.string.rc_name)
+    val softshellClamStr = stringResource(R.string.sc_name)
+    val varnishClamStr = stringResource(R.string.vc_name)
+    val blueMusselStr = stringResource(R.string.bm_name)
+    val californiaMusselStr = stringResource(R.string.cm_name)
+    val olympiaOysterStr = stringResource(R.string.oo_name)
+    val pacificOysterStr = stringResource(R.string.po_name)
+    val pinkScallopStr = stringResource(R.string.ps_name)
+    val purpleScallopStr = stringResource(R.string.rs_name)
+    val spinyScallopStr = stringResource(R.string.ss_name)
+    val weathervaneScallopStr = stringResource(R.string.ws_name)
+
+    val displayNames = remember(
+        butterClamStr, geoduckStr, horseClamStr, littleneckClamStr, manilaClamStr,
+        nuttallsCockleStr, razorClamStr, softshellClamStr, varnishClamStr,
+        blueMusselStr, californiaMusselStr, olympiaOysterStr, pacificOysterStr,
+        pinkScallopStr, purpleScallopStr, spinyScallopStr, weathervaneScallopStr
+    ) {
         mapOf(
-            "BUTTER_CLAM" to "Butter Clam",
-            "GEODUCK_CLAM" to "Geoduck",
-            "HORSE_CLAM" to "Horse Clam",
-            "LITTLENECK_CLAM" to "Littleneck Clam",
-            "MANILA_CLAM" to "Manila Clam",
-            "NUTTALLS_COCKLE" to "Nuttall's Cockle",
-            "PACIFIC_RAZOR_CLAM" to "Razor Clam",
-            "SOFTSHELL_CLAM" to "Softshell Clam",
-            "VARNISH_CLAM" to "Varnish Clam",
-            "BLUE_MUSSEL" to "Blue Mussel",
-            "CALIFORNIA_MUSSEL" to "California Mussel",
-            "OLYMPIA_OYSTER" to "Olympia Oyster",
-            "PACIFIC_OYSTER" to "Pacific Oyster",
-            "PINK_SCALLOP" to "Pink Scallop",
-            "PURPLE_HINGE_ROCK_SCALLOP" to "Purple Scallop",
-            "SPINY_SCALLOP" to "Spiny Scallop",
-            "WEATHERVANE_SCALLOP" to "Weathervane Scallop"
+            "BUTTER_CLAM" to butterClamStr,
+            "GEODUCK_CLAM" to geoduckStr,
+            "HORSE_CLAM" to horseClamStr,
+            "LITTLENECK_CLAM" to littleneckClamStr,
+            "MANILA_CLAM" to manilaClamStr,
+            "NUTTALLS_COCKLE" to nuttallsCockleStr,
+            "PACIFIC_RAZOR_CLAM" to razorClamStr,
+            "SOFTSHELL_CLAM" to softshellClamStr,
+            "VARNISH_CLAM" to varnishClamStr,
+            "BLUE_MUSSEL" to blueMusselStr,
+            "CALIFORNIA_MUSSEL" to californiaMusselStr,
+            "OLYMPIA_OYSTER" to olympiaOysterStr,
+            "PACIFIC_OYSTER" to pacificOysterStr,
+            "PINK_SCALLOP" to pinkScallopStr,
+            "PURPLE_HINGE_ROCK_SCALLOP" to purpleScallopStr,
+            "SPINY_SCALLOP" to spinyScallopStr,
+            "WEATHERVANE_SCALLOP" to weathervaneScallopStr
         )
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
-            Text(text = "Filter Species", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
+            Text(text = stringResource(R.string.filter), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(16.dp))
         Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
@@ -437,14 +462,14 @@ fun SpeciesFilterPage(selectedSpecies: Set<String>, fullSpeciesList: List<String
                 }
             }
         }
-        Button(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) { Text("Done") }
+        Button(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) { Text("OK") }
     }
 }
 
 @Composable
 fun FeatureDetailView(feature: Layer20Feature, repository: MapRepository, onBack: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Regulations", "Tides")
+    val tabs = listOf(stringResource(R.string.regulations), stringResource(R.string.tides))
     val staticBoundaries by repository.staticBoundaries.collectAsStateWithLifecycle()
     
     val overlapsStatic by produceState(initialValue = false, feature, staticBoundaries) {
@@ -467,7 +492,7 @@ fun FeatureDetailView(feature: Layer20Feature, repository: MapRepository, onBack
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
             Text(
                 text = feature.poNum,
                 style = MaterialTheme.typography.headlineMedium,
@@ -504,35 +529,68 @@ fun RegulationsContent(feature: Layer20Feature, repository: MapRepository, overl
     }
 
     val reasonText = when (feature.reason) {
-        1 -> "Biotoxin"; 2 -> "Cessation of biotoxin monitoring"; 3 -> "Chemical"; 4 -> "Sanitary (conditionally approved area)"; 5 -> "Sanitary (emergency)"; 6 -> "Sanitary (shellstock)"; 7 -> "Sanitary (water quality/sanitary pollution source)"; 8 -> "Sanitary and biotoxin"; 9 -> "Conservation"; 10 -> "Sanitary (conditionally restricted area)"; else -> feature.reason.toString()
+        1 -> stringResource(R.string.reason1)
+        2 -> stringResource(R.string.reason2)
+        3 -> stringResource(R.string.reason3)
+        4 -> stringResource(R.string.reason4)
+        5 -> stringResource(R.string.reason5)
+        6 -> stringResource(R.string.reason6)
+        7 -> stringResource(R.string.reason7)
+        8 -> stringResource(R.string.reason8)
+        9 -> stringResource(R.string.reason9)
+        10 -> stringResource(R.string.reason10)
+        else -> feature.reason.toString()
     }
     
     // Define a structure for ordered rows with indentation and group status calculation
     data class RegulationRow(val keys: List<String>, val label: String, val limitKey: String, val indented: Boolean = false)
 
+
+    val allClamStr = stringResource(R.string.allClams)
+    val butterClamStr = stringResource(R.string.bc_name)
+    val geoduckStr = stringResource(R.string.g_name)
+    val horseClamStr = stringResource(R.string.hc_name)
+    val littleneckClamStr = stringResource(R.string.lc_name)
+    val manilaClamStr = stringResource(R.string.mc_name)
+    val nuttallsCockleStr = stringResource(R.string.nc_name)
+    val razorClamStr = stringResource(R.string.rc_name)
+    val softshellClamStr = stringResource(R.string.sc_name)
+    val varnishClamStr = stringResource(R.string.vc_name)
+    val allMusselStr = stringResource(R.string.allMussels)
+    val blueMusselStr = stringResource(R.string.bm_name)
+    val californiaMusselStr = stringResource(R.string.cm_name)
+    val olympiaOysterStr = stringResource(R.string.oo_name)
+    val pacificOysterStr = stringResource(R.string.po_name)
+    val pinkAndSpinyStr = stringResource(R.string.pinkAndSpiny)
+    val pinkScallopStr = stringResource(R.string.ps_name)
+    val spinyScallopStr = stringResource(R.string.ss_name)
+    val purpleAndWeathervaneStr = stringResource(R.string.purpleAndWeathervane)
+    val purpleScallopStr = stringResource(R.string.rs_name)
+    val weathervaneScallopStr = stringResource(R.string.ws_name)
+
     val tableRows = remember {
         listOf(
-            RegulationRow(listOf("BUTTER_CLAM", "HORSE_CLAM", "LITTLENECK_CLAM", "MANILA_CLAM", "PACIFIC_RAZOR_CLAM", "SOFTSHELL_CLAM", "VARNISH_CLAM"), "All Clams (excl. geoduck)", "allClams"),
-            RegulationRow(listOf("BUTTER_CLAM"), "Butter Clam", "butterClam", true),
-            RegulationRow(listOf("HORSE_CLAM"), "Horse Clam", "horseClam", true),
-            RegulationRow(listOf("LITTLENECK_CLAM"), "Littleneck Clam", "littleneckClam", true),
-            RegulationRow(listOf("MANILA_CLAM"), "Manila Clam", "manilaClam", true),
-            RegulationRow(listOf("PACIFIC_RAZOR_CLAM"), "Razor Clam", "pacificRazorClam", true),
-            RegulationRow(listOf("SOFTSHELL_CLAM"), "Softshell Clam", "softshellClam", true),
-            RegulationRow(listOf("VARNISH_CLAM"), "Varnish Clam", "varnishClam", true),
-            RegulationRow(listOf("GEODUCK_CLAM"), "Geoduck", "geoduck"),
-            RegulationRow(listOf("NUTTALLS_COCKLE"), "Nuttall's Cockle", "nuttallsCockle"),
-            RegulationRow(listOf("BLUE_MUSSEL", "CALIFORNIA_MUSSEL"), "All Mussels", "allMussels"),
-            RegulationRow(listOf("BLUE_MUSSEL"), "Blue Mussel", "blueMussel", true),
-            RegulationRow(listOf("CALIFORNIA_MUSSEL"), "California Mussel", "californiaMussel", true),
-            RegulationRow(listOf("OLYMPIA_OYSTER"), "Olympia Oyster", "olympiaOyster"),
-            RegulationRow(listOf("PACIFIC_OYSTER"), "Pacific Oyster", "pacificOyster"),
-            RegulationRow(listOf("PINK_SCALLOP", "SPINY_SCALLOP"), "Pink & Spiny Scallops", "pinkAndSpiny"),
-            RegulationRow(listOf("PINK_SCALLOP"), "Pink Scallop", "pinkScallop", true),
-            RegulationRow(listOf("SPINY_SCALLOP"), "Spiny Scallop", "spinyScallop", true),
-            RegulationRow(listOf("PURPLE_HINGE_ROCK_SCALLOP", "WEATHERVANE_SCALLOP"), "Purple & Weathervane Scallops", "purpleAndWeathervane"),
-            RegulationRow(listOf("PURPLE_HINGE_ROCK_SCALLOP"), "Purple Scallop", "purpleScallop", true),
-            RegulationRow(listOf("WEATHERVANE_SCALLOP"), "Weathervane Scallop", "weathervaneScallop", true)
+            RegulationRow(listOf("BUTTER_CLAM", "HORSE_CLAM", "LITTLENECK_CLAM", "MANILA_CLAM", "PACIFIC_RAZOR_CLAM", "SOFTSHELL_CLAM", "VARNISH_CLAM"), allClamStr, "allClams"),
+            RegulationRow(listOf("BUTTER_CLAM"), butterClamStr, "butterClam", true),
+            RegulationRow(listOf("HORSE_CLAM"), horseClamStr, "horseClam", true),
+            RegulationRow(listOf("LITTLENECK_CLAM"), littleneckClamStr, "littleneckClam", true),
+            RegulationRow(listOf("MANILA_CLAM"), manilaClamStr, "manilaClam", true),
+            RegulationRow(listOf("PACIFIC_RAZOR_CLAM"), razorClamStr, "pacificRazorClam", true),
+            RegulationRow(listOf("SOFTSHELL_CLAM"), softshellClamStr, "softshellClam", true),
+            RegulationRow(listOf("VARNISH_CLAM"), varnishClamStr, "varnishClam", true),
+            RegulationRow(listOf("GEODUCK_CLAM"), geoduckStr, "geoduck"),
+            RegulationRow(listOf("NUTTALLS_COCKLE"), nuttallsCockleStr, "nuttallsCockle"),
+            RegulationRow(listOf("BLUE_MUSSEL", "CALIFORNIA_MUSSEL"), allMusselStr, "allMussels"),
+            RegulationRow(listOf("BLUE_MUSSEL"), blueMusselStr, "blueMussel", true),
+            RegulationRow(listOf("CALIFORNIA_MUSSEL"), californiaMusselStr, "californiaMussel", true),
+            RegulationRow(listOf("OLYMPIA_OYSTER"), olympiaOysterStr, "olympiaOyster"),
+            RegulationRow(listOf("PACIFIC_OYSTER"), pacificOysterStr, "pacificOyster"),
+            RegulationRow(listOf("PINK_SCALLOP", "SPINY_SCALLOP"), pinkAndSpinyStr, "pinkAndSpiny"),
+            RegulationRow(listOf("PINK_SCALLOP"), pinkScallopStr, "pinkScallop", true),
+            RegulationRow(listOf("SPINY_SCALLOP"), spinyScallopStr, "spinyScallop", true),
+            RegulationRow(listOf("PURPLE_HINGE_ROCK_SCALLOP", "WEATHERVANE_SCALLOP"), purpleAndWeathervaneStr, "purpleAndWeathervane"),
+            RegulationRow(listOf("PURPLE_HINGE_ROCK_SCALLOP"), purpleScallopStr, "purpleScallop", true),
+            RegulationRow(listOf("WEATHERVANE_SCALLOP"), weathervaneScallopStr, "weathervaneScallop", true)
         )
     }
 
@@ -547,7 +605,7 @@ fun RegulationsContent(feature: Layer20Feature, repository: MapRepository, overl
                     Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "This area overlaps with the Pacific Rim National Park Reserve boundary. Additional regulations may apply.",
+                        text = stringResource(R.string.prOverlap),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -556,22 +614,22 @@ fun RegulationsContent(feature: Layer20Feature, repository: MapRepository, overl
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        DetailRow(label = "Place Name", value = feature.placeNameEn)
-        Text(text = "Public Notice URL", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        DetailRow(label = stringResource(R.string.placeName), value = feature.placeNameEn)
+        Text(text = stringResource(R.string.url), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         if (feature.publicNoticeUrl != "N/A" && feature.publicNoticeUrl.startsWith("http")) {
             Text(text = feature.publicNoticeUrl, style = MaterialTheme.typography.bodyLarge.copy(textDecoration = TextDecoration.Underline), color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 4.dp).clickable { try { uriHandler.openUri(feature.publicNoticeUrl) } catch (e: Exception) { Log.e("MapDestination", "Failed to open notice URL", e) } })
         } else {
             SelectionContainer { Text(text = feature.publicNoticeUrl, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.secondary) }
         }
         Spacer(modifier = Modifier.height(12.dp))
-        DetailRow(label = "Reason", value = reasonText)
-        DetailRow(label = "Enforce Date", value = feature.enforceDateEn)
+        DetailRow(label = stringResource(R.string.reason), value = reasonText)
+        DetailRow(label = stringResource(R.string.enforceDate), value = feature.enforceDateEn)
         Spacer(modifier = Modifier.height(24.dp))
-        Text(text = "Species Daily Harvest Limit", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 8.dp))
+        Text(text = stringResource(R.string.speciesDailyHarvestLimit), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 8.dp))
         Column(modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.outline)) {
             Row(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.secondaryContainer).padding(8.dp)) {
-                Text(text = "Species", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Text(text = "Limit", modifier = Modifier.width(80.dp), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(text = stringResource(R.string.species), modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(text = stringResource(R.string.limit), modifier = Modifier.width(80.dp), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             }
             tableRows.forEach { row ->
                 // Calculate status based on all keys in the row (for groups)
@@ -581,7 +639,7 @@ fun RegulationsContent(feature: Layer20Feature, repository: MapRepository, overl
                     statuses.all { it == 1 } -> 1 // Only closed if ALL listed species are closed
                     else -> -1 // Mix of closed/N/A or all N/A
                 }
-                val statusText = when (statusValue) { 0 -> "Open"; 1 -> "0 (Closed)"; else -> "N/A" }
+                val statusText = when (statusValue) { 0 -> stringResource(R.string.open); 1 -> "0 (" + stringResource(R.string.closed) + ")"; else -> "N/A" }
                 
                 // Get the limit value from the CatchLimit entity
                 val limitValue = catchLimit?.let { cl ->
@@ -611,7 +669,7 @@ fun RegulationsContent(feature: Layer20Feature, repository: MapRepository, overl
                     }
                 }?.toString() ?: "..."
 
-                val displayLimit = if (statusValue == 1) "0 (Closed)" else limitValue
+                val displayLimit = if (statusValue == 1) "0 (" + stringResource(R.string.closed) + ")" else limitValue
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                 Row(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -627,14 +685,14 @@ fun RegulationsContent(feature: Layer20Feature, repository: MapRepository, overl
                         text = displayLimit,
                         modifier = Modifier.width(80.dp), 
                         style = MaterialTheme.typography.bodyMedium, 
-                        color = if (statusText == "0 (Closed)") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                        fontWeight = if (statusText == "0 (Closed)") FontWeight.Bold else FontWeight.Normal
+                        color = if (statusText == "0 (" + stringResource(R.string.closed) + ")") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        fontWeight = if (statusText == "0 (" + stringResource(R.string.closed) + ")") FontWeight.Bold else FontWeight.Normal
                     )
                 }
             }
         }
         Text(
-            text = "* The maximum possession limit for each species is twice the daily catch limit.",
+            text = "* " + stringResource(R.string.possessionLimit),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline,
             modifier = Modifier.padding(top = 8.dp)
@@ -648,6 +706,7 @@ fun TidesContent(feature: Layer20Feature, repository: MapRepository) {
     val stations by repository.stations.collectAsStateWithLifecycle()
     var tideResult by remember { mutableStateOf<Pair<Station, List<TideData>>?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    val currentLocale = LocalConfiguration.current.locales[0]
 
     val closestStation = remember(feature, stations) {
         stations.find { it.id == feature.closestStationId }
@@ -666,10 +725,9 @@ fun TidesContent(feature: Layer20Feature, repository: MapRepository) {
             }
         } else if (tideResult != null) {
             val (usedStation, tideData) = tideResult!!
-            val isFallback = closestStation != null && usedStation.id != closestStation.id
 
             Text(
-                text = if (isFallback) "Using Nearby Station (Fallback):" else "Closest Station:",
+                text = stringResource(R.string.closestStation),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -679,22 +737,13 @@ fun TidesContent(feature: Layer20Feature, repository: MapRepository) {
                 fontWeight = FontWeight.Bold
             )
             
-            if (isFallback) {
-                Text(
-                    text = "No data found for ${closestStation.name}. Showing results from the next closest available station.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-            
             Spacer(modifier = Modifier.height(16.dp))
 
             if (tideData.isEmpty()) {
-                Text("No tide data available for this station. Please sync while online.")
+                Text(stringResource(R.string.noTideData))
             } else {
                 Text(
-                    text = "High/Low Tide Predictions (PST)",
+                    text = stringResource(R.string.highLowTide),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -713,13 +762,13 @@ fun TidesContent(feature: Layer20Feature, repository: MapRepository) {
                             .background(MaterialTheme.colorScheme.secondaryContainer)
                             .padding(8.dp)
                     ) {
-                        Text("Date", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                        Text("Time", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                        Text("Height (m)", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, textAlign = TextAlign.End)
+                        Text(stringResource(R.string.date), modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.time), modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.height), modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, textAlign = TextAlign.End)
                     }
                     
                     // Group data by date
-                    val groupedData = tideData.groupBy { it.dateLabel }
+                    val groupedData = tideData.groupBy { it.getDateLabel(currentLocale) }
 
                     groupedData.forEach { (date, events) ->
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
@@ -739,8 +788,8 @@ fun TidesContent(feature: Layer20Feature, repository: MapRepository) {
                                 events.forEachIndexed { index, event ->
                                     if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                                     Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                                        Text(text = event.timeLabel, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                                        Text(text = String.format(Locale.US, "%.2f", event.value), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.End)
+                                        Text(text = event.getTimeLabel(currentLocale), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                                        Text(text = String.format(currentLocale, "%.2f", event.value), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.End)
                                     }
                                 }
                             }
@@ -749,11 +798,7 @@ fun TidesContent(feature: Layer20Feature, repository: MapRepository) {
                 }
             }
         } else {
-            if (stations.isEmpty()) {
-                Text("Station information not available. Please sync while online.")
-            } else {
-                Text("No tide data found for any nearby stations. Please sync while online.")
-            }
+            Text(stringResource(R.string.noTideData))
         }
     }
 }

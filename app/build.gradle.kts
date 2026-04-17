@@ -39,13 +39,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-            javaParameters.set(true)
-        }
-    }
-
     buildFeatures {
         compose = true
     }
@@ -56,6 +49,13 @@ android {
         jniLibs {
             useLegacyPackaging = false
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+        javaParameters.set(true)
     }
 }
 
@@ -75,6 +75,9 @@ dependencies {
     // SplashScreen API
     implementation(libs.androidx.core.splashscreen)
     
+    // AppCompat for localization
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    
     // CameraX
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
@@ -90,7 +93,7 @@ dependencies {
     // ArcGIS Maps SDK for Kotlin
     implementation(libs.arcgis.maps.kotlin)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
-    implementation(libs.play.services.location)
+    implementation(libs.playServicesLocation)
 
     // Room
     implementation(libs.androidx.room.runtime)

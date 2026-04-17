@@ -1,11 +1,12 @@
 package com.example.projectneptune
 
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material.icons.Icons
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Map
@@ -25,7 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.arcgismaps.ApiKey
 import com.arcgismaps.ArcGISEnvironment
@@ -35,7 +38,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,11 +104,12 @@ fun ProjectNeptuneApp(cameraExecutor: ExecutorService? = null) {
                 item(
                     icon = {
                         when (val icon = it.icon) {
-                            is ImageVector -> Icon(icon, contentDescription = it.label)
-                            is Int -> Icon(painterResource(icon), contentDescription = it.label)
+                            is ImageVector -> Icon(icon, contentDescription = stringResource(it.labelRes))
+                            is Int -> Icon(painterResource(icon), contentDescription = stringResource(it.labelRes))
+                            else -> {}
                         }
                     },
-                    label = { Text(it.label) },
+                    label = { Text(stringResource(it.labelRes)) },
                     selected = it == currentDestination && !isTrackingCatch,
                     onClick = { 
                         currentDestination = it
@@ -196,10 +200,10 @@ fun ProjectNeptuneApp(cameraExecutor: ExecutorService? = null) {
     }
 }
 
-enum class AppDestinations(val label: String, val icon: Any) {
-    CAMERA("Camera", Icons.Default.CameraAlt),
-    CATCH_LOG("Catch Log", Icons.Default.AutoStories),
-    MAP("Map", Icons.Default.Map),
-    REFERENCE_GUIDE("Reference", R.drawable.reference_icon),
-    SETTINGS("Settings", Icons.Default.Settings),
+enum class AppDestinations(val labelRes: Int, val icon: Any) {
+    CAMERA(R.string.camera_label, Icons.Default.CameraAlt),
+    CATCH_LOG(R.string.catch_log_label, Icons.Default.AutoStories),
+    MAP(R.string.map_label, Icons.Default.Map),
+    REFERENCE_GUIDE(R.string.reference_label, R.drawable.reference_icon),
+    SETTINGS(R.string.settings_label, Icons.Default.Settings),
 }

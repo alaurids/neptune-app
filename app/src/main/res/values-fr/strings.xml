@@ -1,0 +1,201 @@
+<resources>
+    <string name="app_name">ProjetNeptune</string>
+    <string name="app_version">1.0.0</string>
+
+    <string name="clams">Palourdes</string>
+    <string name="cockles">Coques</string>
+    <string name="scallops">Pétoncles</string>
+    <string name="mussels">Moules</string>
+    <string name="oysters">Huîtres</string>
+    <string name="abalones">Ormeaux</string>
+
+    <!-- Moule bleue -->
+    <string name="bm_name">Moule bleue</string>
+    <string name="bm_scientific">Mytilus edulis</string>
+    <string name="bm_description">Un mollusque intertidal commun avec une coquille bleu foncé ou noire.</string>
+
+    <!-- Palourde jaune -->
+    <string name="bc_name">Palourde jaune</string>
+    <string name="bc_scientific">Saxidomus gigantea</string>
+    <string name="bc_description">Une grande palourde à coquille lourde commune dans le Pacifique Nord-Ouest. La taille minimale de récolte des palourdes jaunes est de 55 mm. Si vous enterrez à nouveau cette espèce, enterrez-la à 25 cm de profondeur dans le même trou où vous l\'avez trouvée, le côté court vers le bas et le côté long vers le haut.</string>
+
+    <!-- Moule de Californie -->
+    <string name="cm_name">Moule de Californie</string>
+    <string name="cm_scientific">Mytilus californianus</string>
+    <string name="cm_description">Une grande moule que l\'on trouve sur les rivages rocheux balayés par les vagues.</string>
+
+    <!-- Panope du Pacifique -->
+    <string name="g_name">Panope du Pacifique</string>
+    <string name="g_scientific">Panopea generosa</string>
+    <string name="g_description">La plus grande palourde fouisseuse au monde, connue pour son long siphon.</string>
+
+    <!-- Palourde de cheval -->
+    <string name="hc_name">Palourde de cheval</string>
+    <string name="hc_scientific">Tresus capax</string>
+    <string name="hc_description">Une grande palourde qui peut peser jusqu\'à 4 livres. Également connue sous le nom de Pacific Gaper.</string>
+
+    <!-- Palourde de l\'Atlantique -->
+    <string name="lc_name">Palourde de l\'Atlantique</string>
+    <string name="lc_scientific">Protothaca staminea</string>
+    <string name="lc_description">Une palourde comestible populaire avec une coquille ronde et épaisse. La taille minimale de récolte pour les palourdes de l\'Atlantique est de 35 mm. Si vous enterrez à nouveau cette espèce, enterrez-la à 5 cm de profondeur dans le même trou où vous l\'avez trouvée, le côté court vers le bas et le côté long vers le haut.</string>
+
+    <!-- Palourde japonaise -->
+    <string name="mc_name">Palourde japonaise</string>
+    <string name="mc_scientific">Venerupis philippinarum</string>
+    <string name="mc_description">Également connue sous le nom de palourde japonaise, elle possède un motif de coquille entrecroisé distinctif. La taille minimale de récolte pour les palourdes japonaises est de 35 mm. Si vous enterrez à nouveau cette espèce, enterrez-la à 5 cm de profondeur dans le même trou où vous l\'avez trouvée, le côté court vers le bas et le côté long vers le haut.</string>
+
+    <!-- Ormeau nordique -->
+    <string name="na_name">Ormeau nordique</string>
+    <string name="na_scientific">Haliotis kamtschatkana</string>
+    <string name="na_description">Une espèce rare et protégée avec un bel intérieur de coquille iridescent. La récolte de cette espèce est interdite.</string>
+
+    <!-- Coque de Nuttall -->
+    <string name="nc_name">Coque de Nuttall</string>
+    <string name="nc_scientific">Clinocardium nuttallii</string>
+    <string name="nc_description">Une grande coque avec des côtes radiales proéminentes. Si vous enterrez à nouveau cette espèce, enterrez-la à 5 cm de profondeur dans le même trou où vous l\'avez trouvée, le côté court vers le bas et le côté long vers le haut.</string>
+
+    <!-- Huître d\'Olympia -->
+    <string name="oo_name">Huître d\'Olympia</string>
+    <string name="oo_scientific">Ostrea lurida</string>
+    <string name="oo_description">La seule huître indigène de la côte Pacifique de l\'Amérique du Nord. En vertu de la Loi sur les espèces en péril, l\'huître d\'Olympia est inscrite comme espèce préoccupante et sa récolte est illégale.</string>
+
+    <!-- Huître du Pacifique -->
+    <string name="po_name">Huître du Pacifique</string>
+    <string name="po_scientific">Magallana gigas</string>
+    <string name="po_description">L\'huître la plus largement cultivée au monde. Pour éviter de récolter l\'huître d\'Olympia protégée, ne récoltez que des huîtres du Pacifique de plus de 5 cm de longueur.</string>
+
+    <!-- Pétoncle rose -->
+    <string name="ps_name">Pétoncle rose</string>
+    <string name="ps_scientific">Chlamys rubida</string>
+    <string name="ps_description">Un petit pétoncle coloré que l\'on trouve dans les eaux plus profondes.</string>
+
+    <!-- Pétoncle pourpre -->
+    <string name="rs_name">Pétoncle pourpre</string>
+    <string name="rs_scientific">Crassadoma gigantea</string>
+    <string name="rs_description">Une espèce de pétoncle connue pour sa teinte pourpre à la charnière de l\'intérieur de la coquille. Également connu sous le nom de pétoncle géant.</string>
+
+    <!-- Couteau du Pacifique -->
+    <string name="rc_name">Couteau du Pacifique</string>
+    <string name="rc_scientific">Siliqua patula</string>
+    <string name="rc_description">Une palourde oblongue que l\'on trouve sur les plages de sable, connue pour sa rapidité d\'enfouissement.</string>
+
+    <!-- Mye commune -->
+    <string name="sc_name">Mye commune</string>
+    <string name="sc_scientific">Mya arenaria</string>
+    <string name="sc_description">Connue pour sa coquille mince et fragile et son long siphon.</string>
+
+    <!-- Pétoncle épineux -->
+    <string name="ss_name">Pétoncle épineux</string>
+    <string name="ss_scientific">Chlamys hastata</string>
+    <string name="ss_description">Un pétoncle avec des épines ou des côtes distinctives sur sa coquille.</string>
+
+    <!-- Palourde vernie -->
+    <string name="vc_name">Palourde vernie</string>
+    <string name="vc_scientific">Nuttallia obscurata</string>
+    <string name="vc_description">Une espèce envahissante avec un périostracum mince et brun foncé ressemblant à du vernis.</string>
+
+    <!-- Pétoncle patte de lion -->
+    <string name="ws_name">Pétoncle patte de lion</string>
+    <string name="ws_scientific">Patinopecten caurinus</string>
+    <string name="ws_description">La plus grande espèce de pétoncle au monde, que l\'on trouve dans le Pacifique Nord.</string>
+
+    <!-- Settings -->
+    <string name="language_settings">Paramètres de langue</string>
+    <string name="select_language">Choisir la langue</string>
+    <string name="english">Anglais</string>
+    <string name="french">Français</string>
+    <string name="language_change_restart">L\'application doit redémarrer pour appliquer les changements de langue.</string>
+    <string name="never">Jamais</string>
+    <string name="offlineDownloadAttempt">Vous êtes hors ligne. Veuillez vous connecter à Internet pour télécharger la carte.</string>
+    <string name="downloadingBasemap">Téléchargement de la carte de base…</string>
+    <string name="youCanLeave">Vous pouvez quitter cet écran ; le téléchargement continuera.</string>
+    <string name="cancelDownload">Annuler le téléchargement</string>
+    <string name="mapData">Données cartographiques</string>
+    <string name="lastSync">Dernière synchronisation :</string>
+    <string name="dataInfo">Les données sont mises à jour automatiquement toutes les heures lorsque l\'application est ouverte et connectée à Internet.</string>
+    <string name="tideForecastDuration">Durée des prévisions de marée</string>
+    <string name="tideDur1">Téléchargez les prévisions de marée pour les</string>
+    <string name="tideDur2">prochains jours.</string>
+    <string name="offlineSyncAttempt">Vous êtes hors ligne. Veuillez vous connecter à Internet pour synchroniser les données cartographiques.</string>
+    <string name="syncing">Synchrnoisation en cours…</string>
+    <string name="syncNow">Synchronisez les données cartographiques</string>
+    <string name="offlineBasemap">Fond de carte hors ligne</string>
+    <string name="downloaded">Téléchargé</string>
+    <string name="downloadArea">Zone de téléchargement</string>
+    <string name="clearOffline">Effacer les données hors ligne</string>
+    <string name="selectDownloadArea">Sélectionner la zone de téléchargement</string>
+    <string name="areaVisible">La zone visible ci-haut sera téléchargée pour une utilisation hors ligne.</string>
+    <string name="download">Télécharger</string>
+
+    <!-- Map -->
+    <string name="offlineNoMapData1">Hors ligne : Aucune donnée cartographique</string>
+    <string name="offlineNoMapData2">Les zones réglementaires n\'ont pas encore été téléchargées. Connectez-vous à Internet pour synchroniser.</string>
+    <string name="regulations">Règlements</string>
+    <string name="tides">Marées</string>
+    <string name="prOverlap">Cette zone chevauche les limites de la réserve du parc national Pacific Rim. Des règlements supplémentaires peuvent s\'appliquer.</string>
+    <string name="placeName">Nom de lieu</string>
+    <string name="url">URL de l\'avis public</string>
+    <string name="reason">Raison</string>
+    <string name="enforceDate">Date d\'application</string>
+    <string name="speciesDailyHarvestLimit">Limite de récolte quotidienne</string>
+    <string name="species">Espèces</string>
+    <string name="limit">Limite</string>
+    <string name="open">Ouvert</string>
+    <string name="closed">Fermé</string>
+    <string name="possessionLimit">La limite maximale de possession pour chaque espèce est le double de la limite de capture journalière.</string>
+    <string name="closestStation">Station la plus proche :</string>
+    <string name="noTideData">Aucune donnée n\'est disponible pour cette station. Veuillez synchroniser vos données lorsque vous êtes en ligne.</string>
+    <string name="highLowTide">Prévisions des marées hautes et basses (PST)</string>
+    <string name="date">Date</string>
+    <string name="time">Heure</string>
+    <string name="height">Hauteur (m)</string>
+    <!-- Closure Reasons -->
+    <string name="reason1">Biotoxine</string>
+    <string name="reason2">Arrêt de la surveillance des biotoxines</string>
+    <string name="reason3">Risque chimique</string>
+    <string name="reason4">Zone sanitaire (autorisation conditionnelle)</string>
+    <string name="reason5">Zone sanitaire (urgence) </string>
+    <string name="reason6">Zone sanitaire (stock de coquillages)</string>
+    <string name="reason7">Zone sanitaire (qualité de l\'eau/source de pollution sanitaire)</string>
+    <string name="reason8">Zone sanitaire et biotoxine</string>
+    <string name="reason9">Conservation</string>
+    <string name="reason10">Zone sanitaire (accès restreint conditionnel)</string>
+    <!-- Species Groups -->
+    <string name="allClams">Toutes les palourdes (panope exclue)</string>
+    <string name="allMussels">Tous les moules</string>
+    <string name="pinkAndSpiny">Les pétoncles roses et épineux</string>
+    <string name="purpleAndWeathervane">Les pétoncles pourpres et patte de lion</string>
+
+    <!-- Catch Log -->
+    <string name="catchLog">Journal des récoltes</string>
+    <string name="addEntries">Ajouter des entrées</string>
+    <string name="edit">Corriger</string>
+    <string name="delete">Supprimer</string>
+    <!-- Catch tracking screen -->
+    <string name="fetchingLocation">Récupération de la localisation…</string>
+    <string name="missingInfo1">Informations manquantes</string>
+    <string name="missingInfo2">Certains champs sont vides. Voulez-vous continuer malgré tout ?</string>
+    <string name="locUnavailable">Endroit indisponible</string>
+    <string name="catchTrack">Suivi des récoltes</string>
+    <string name="addEntry">Ajouter l\'entrée</string>
+    <string name="quantity">Quantité</string>
+    <string name="timeDefault">Par défaut, l\'heure est affichée.</string>
+    <string name="location">Emplacement</string>
+    <string name="locationDefault">Par défaut, les coordonnées actuelles.</string>
+    <string name="regWarning">Avertissement concernant la réglementation</string>
+    <string name="addAnyway">Ajouter quand même</string>
+
+    <!-- Tabs -->
+    <string name="camera_label">Caméra</string>
+    <string name="catch_log_label">Journal</string>
+    <string name="map_label">Carte</string>
+    <string name="reference_label">Référence</string>
+    <string name="settings_label">Paramètres</string>
+
+    <!-- Misc -->
+    <string name="loading">Chargement…</string>
+    <string name="cancel">Annuler</string>
+    <string name="back">Retour</string>
+    <string name="filter">Filtrer</string>
+    <string name="cont">Continuer</string>
+</resources>

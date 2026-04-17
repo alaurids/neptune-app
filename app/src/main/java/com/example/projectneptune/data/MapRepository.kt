@@ -3,10 +3,7 @@ package com.example.projectneptune.data
 import android.content.Context
 import android.util.JsonReader
 import android.util.Log
-import com.arcgismaps.geometry.Envelope
-import com.arcgismaps.geometry.Geometry
-import com.arcgismaps.geometry.GeometryEngine
-import com.arcgismaps.geometry.SpatialReference
+import com.arcgismaps.geometry.*
 import com.arcgismaps.mapping.ArcGISMap
 import com.arcgismaps.mapping.BasemapStyle
 import com.arcgismaps.mapping.Basemap
@@ -152,7 +149,7 @@ class MapRepository(private val context: Context) {
                                 async(Dispatchers.IO) {
                                     try {
                                         val idsString = chunk.joinToString(",")
-                                        val chunkUrl = "$baseUrl?objectIds=$idsString&outFields=$requiredFields&f=json&returnGeometry=true&outSR=3857&maxAllowableOffset=20&geometryPrecision=0"
+                                        val chunkUrl = "$baseUrl?objectIds=$idsString&outFields=$requiredFields&f=json&returnGeometry=true&outSR=4326&maxAllowableOffset=0.0001&geometryPrecision=6"
                                         val chunkFeatures = parseFeaturesStreaming(chunkUrl, stationList)
                                         if (chunkFeatures.isNotEmpty()) mapDao.insertAllLayer20Features(chunkFeatures)
                                     } catch (e: Exception) {
@@ -319,8 +316,6 @@ class MapRepository(private val context: Context) {
                             
                             // Formats must be local to the async block as SimpleDateFormat is not thread-safe
                             val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
-                            val dateOutputFormat = SimpleDateFormat("MMM d", Locale.getDefault()).apply { timeZone = TimeZone.getTimeZone("America/Los_Angeles") }
-                            val timeOutputFormat = SimpleDateFormat("HH:mm", Locale.getDefault()).apply { timeZone = TimeZone.getTimeZone("America/Los_Angeles") }
 
                             val tideList = mutableListOf<TideData>()
                             for (i in 0 until dataJson.length()) {
@@ -332,8 +327,7 @@ class MapRepository(private val context: Context) {
                                     if (dateObj != null) {
                                         tideList.add(TideData(
                                             stationId = station.id,
-                                            dateLabel = dateOutputFormat.format(dateObj),
-                                            timeLabel = timeOutputFormat.format(dateObj),
+                                            timestamp = dateObj.time,
                                             value = value
                                         ))
                                     }
@@ -357,13 +351,9 @@ class MapRepository(private val context: Context) {
         val result = mutableListOf<Layer20Feature>()
         var globalSR: String? = null
         
-        // Optimization: Project stations to Web Mercator once to avoid thousands of projections in the loop
-        val stationsWithGeom = stations.mapNotNull { station ->
-            val p = GeometryEngine.projectOrNull(
-                com.arcgismaps.geometry.Point(station.longitude, station.latitude, SpatialReference.wgs84()),
-                SpatialReference.webMercator()
-            ) as? com.arcgismaps.geometry.Point
-            if (p != null) station.id to p else null
+        // Use WGS84 for stations since the feature query uses outSR=4326
+        val stationsWithGeom = stations.map { station ->
+            station.id to com.arcgismaps.geometry.Point(station.longitude, station.latitude, SpatialReference.wgs84())
         }
 
         val connection = URL(urlString).openConnection() as HttpURLConnection
@@ -530,6 +520,159 @@ class MapRepository(private val context: Context) {
     fun clearOfflineBasemap(): Boolean {
         val file = File(context.filesDir, "basemap.vtpk")
         return if (file.exists()) file.delete() else false
+    }
+
+    suspend fun getValidationWarning(speciesName: String, quantity: Int, locationStr: String): String? {
+        val latLon = locationStr.split(",").map { it.trim().toDoubleOrNull() }
+        if (latLon.size != 2 || latLon[0] == null || latLon[1] == null) return null
+        
+        val lat = latLon[0]!!
+        val lon = latLon[1]!!
+
+        // 1. Find the relevant regulation area (Layer20Feature)
+        val allFeatures = _features.value
+        if (allFeatures.isEmpty()) return null
+
+        // Map species display name to internal property for closure checking
+        val speciesInternalName = when (speciesName.lowercase()) {
+            "butter clam" -> "butterClam"
+            "geoduck" -> "geoduckClam"
+            "horse clam" -> "horseClam"
+            "littleneck clam" -> "littleneckClam"
+            "manila clam" -> "manilaClam"
+            "nuttall's cockle", "nuttall\'s cockle" -> "nuttallsCockle"
+            "pacific razor clam", "razor clam" -> "pacificRazorClam"
+            "softshell clam" -> "softshellClam"
+            "varnish clam" -> "varnishClam"
+            "blue mussel" -> "blueMussel"
+            "california mussel" -> "californiaMussel"
+            "olympia oyster" -> "olympiaOyster"
+            "pacific oyster" -> "pacificOyster"
+            "pink scallop" -> "pinkScallop"
+            "spiny scallop" -> "spinyScallop"
+            "purple scallop" -> "purpleScallop"
+            "weathervane scallop" -> "weathervaneScallop"
+            else -> null
+        }
+
+        // Helper to check if a feature is "Closed" (1) for the target species
+        fun isClosed(feature: Layer20Feature): Boolean {
+            if (speciesInternalName == null) return false
+            return when (speciesInternalName) {
+                "butterClam" -> feature.butterClam
+                "geoduckClam" -> feature.geoduckClam
+                "horseClam" -> feature.horseClam
+                "littleneckClam" -> feature.littleneckClam
+                "manilaClam" -> feature.manilaClam
+                "nuttallsCockle" -> feature.nuttallsCockle
+                "pacificRazorClam" -> feature.pacificRazorClam
+                "softshellClam" -> feature.softshellClam
+                "varnishClam" -> feature.varnishClam
+                "blueMussel" -> feature.blueMussel
+                "californiaMussel" -> feature.californiaMussel
+                "olympiaOyster" -> feature.olympiaOyster
+                "pacificOyster" -> feature.pacificOyster
+                "pinkScallop" -> feature.pinkScallop
+                "spinyScallop" -> feature.spinyScallop
+                "purpleScallop" -> feature.purpleHingeRockScallop
+                "weathervaneScallop" -> feature.weathervaneScallop
+                else -> -1
+            } == 1
+        }
+
+        // Find features that contain the point OR are within ~100m
+        val userPoint = com.arcgismaps.geometry.Point(lon, lat, SpatialReference.wgs84())
+        
+        val candidateFeatures = allFeatures.filter { 
+            // Broad bounding box check (0.002 degrees is ~220m, safe buffer)
+            lon >= (it.minX - 0.002) && lon <= (it.maxX + 0.002) && 
+            lat >= (it.minY - 0.002) && lat <= (it.maxY + 0.002)
+        }
+
+        // Refine using actual geometry intersection with a 100m geodetic buffer
+        val intersectingFeatures = candidateFeatures.filter { feature ->
+            val geom = Geometry.fromJsonOrNull(feature.geometryJson) ?: return@filter false
+            
+            // Project user point to feature's SR if needed
+            val targetPoint = if (geom.spatialReference != userPoint.spatialReference && geom.spatialReference != null) {
+                GeometryEngine.projectOrNull(userPoint, geom.spatialReference!!) as? com.arcgismaps.geometry.Point ?: userPoint
+            } else {
+                userPoint
+            }
+
+            // Check if point is within 100m geodetically
+            try {
+                // For ArcGIS Maps SDK 200.x, use nearestCoordinate to find distance
+                val result = GeometryEngine.nearestCoordinate(geom, targetPoint)
+                result?.distance ?: Double.MAX_VALUE <= 100.0
+            } catch (e: Exception) {
+                // Fallback to simple intersection
+                GeometryEngine.intersects(geom, targetPoint)
+            }
+        }
+
+        val bestFeature = if (intersectingFeatures.isNotEmpty()) {
+            // Priority:
+            // 1. Any area that is CLOSED (red) for this species
+            // 2. Otherwise, the smallest area (most specific)
+            intersectingFeatures.find { isClosed(it) } ?: intersectingFeatures.minBy { 
+                (it.maxX - it.minX) * (it.maxY - it.minY) 
+            }
+        } else if (candidateFeatures.isNotEmpty()) {
+            // Fallback to closest bounding box if no actual intersection
+            candidateFeatures.minBy { 
+                val centerX = (it.minX + it.maxX) / 2.0
+                val centerY = (it.minY + it.maxY) / 2.0
+                calculateDistance(lat, lon, centerY, centerX)
+            }
+        } else {
+            // Ultimate fallback: Find the geographically nearest area based on center point distance
+            allFeatures.minByOrNull { feature ->
+                val centerX = (feature.minX + feature.maxX) / 2.0
+                val centerY = (feature.minY + feature.maxY) / 2.0
+                calculateDistance(lat, lon, centerY, centerX)
+            }
+        }
+        
+        if (bestFeature == null) return null
+
+        // 3. Check if species is closed in this area
+        if (speciesInternalName != null) {
+            if (isClosed(bestFeature)) return "Harvesting $speciesName is currently CLOSED in this area (${bestFeature.poNum})."
+        }
+
+        // 4. Check daily limits
+        val zoneId = if (bestFeature.placeNameEn.contains("Pacific Rim", ignoreCase = true)) "PACIFIC-RIM" else "DEFAULT"
+        val limitObj = mapDao.getCatchLimit(zoneId) ?: mapDao.getCatchLimit("DEFAULT")
+        
+        if (limitObj != null && speciesInternalName != null) {
+            val limit = when (speciesInternalName) {
+                "butterClam" -> limitObj.butterClam
+                "geoduckClam" -> limitObj.geoduck
+                "horseClam" -> limitObj.horseClam
+                "littleneckClam" -> limitObj.littleneckClam
+                "manilaClam" -> limitObj.manilaClam
+                "nuttallsCockle" -> limitObj.nuttallsCockle
+                "pacificRazorClam" -> limitObj.pacificRazorClam
+                "softshellClam" -> limitObj.softshellClam
+                "varnishClam" -> limitObj.varnishClam
+                "blueMussel" -> limitObj.blueMussel
+                "californiaMussel" -> limitObj.californiaMussel
+                "olympiaOyster" -> limitObj.olympiaOyster
+                "pacificOyster" -> limitObj.pacificOyster
+                "pinkScallop" -> limitObj.pinkScallop
+                "spinyScallop" -> limitObj.spinyScallop
+                "purpleScallop" -> limitObj.purpleScallop
+                "weathervaneScallop" -> limitObj.weathervaneScallop
+                else -> 0
+            }
+            
+            if (limit > 0 && quantity > limit) {
+                return "The daily limit for $speciesName in this area is $limit. You entered $quantity."
+            }
+        }
+
+        return null
     }
 
     suspend fun upsertCatchEntry(species: String, quantity: String, time: String, location: String, id: Int = 0) {

@@ -11,6 +11,7 @@ import android.graphics.Matrix
 import androidx.exifinterface.media.ExifInterface
 import android.util.Log
 import android.widget.Toast
+import android.speech.tts.TextToSpeech
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -32,18 +33,20 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.example.projectneptune.data.MapRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,9 +60,10 @@ import java.util.concurrent.ExecutorService
 
 @Composable
 fun CameraDestination(
+    repository: MapRepository,
     cameraExecutor: ExecutorService,
-    onSpeciesDetected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSpeciesDetected: (String) -> Unit
 ){
     val context = LocalContext.current
     var hasCameraPermission by remember {
@@ -85,22 +89,24 @@ fun CameraDestination(
     }
 
     if (hasCameraPermission) {
-        CameraPreview(cameraExecutor, onSpeciesDetected, modifier)
+        CameraPreview(repository, cameraExecutor, modifier, onSpeciesDetected)
     } else {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Camera permission is required to use this feature.")
+            Text(stringResource(R.string.camPermsReq))
         }
     }
 }
 
 @Composable
 fun CameraPreview(
+    repository: MapRepository,
     cameraExecutor: ExecutorService,
-    onSpeciesDetected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSpeciesDetected: (String) -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
     val previewView = remember { PreviewView(context) }
     val imageCapture: ImageCapture = remember {
         ImageCapture.Builder()
@@ -110,9 +116,28 @@ fun CameraPreview(
 
     var capturedFile by remember { mutableStateOf<File?>(null) }
     var isCropping by remember { mutableStateOf(false) }
+    var isIdentifying by remember { mutableStateOf(false) }
+    var detectionResult by remember { mutableStateOf<String?>(null) }
 
-    // Use a single effect to manage camera binding/unbinding. 
-    // This unbinds the camera when a photo is being reviewed or cropped.
+    // TTS State
+    val currentLocale = LocalConfiguration.current.locales[0]
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    // Initialize TTS and handle language changes
+    DisposableEffect(context, currentLocale) {
+        val ttsInstance = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.language = currentLocale
+            }
+        }
+        tts = ttsInstance
+        onDispose {
+            ttsInstance.stop()
+            ttsInstance.shutdown()
+        }
+    }
+
+    // Use a single effect to manage camera binding/unbinding.
     LaunchedEffect(capturedFile) {
         val cameraProvider = ProcessCameraProvider.getInstance(context).get()
         if (capturedFile == null) {
@@ -134,7 +159,7 @@ fun CameraPreview(
         }
     }
 
-    // Ensure camera is released when this screen is no longer in the composition (tab switch)
+    // Ensure camera is released when this screen is no longer in the composition
     DisposableEffect(Unit) {
         onDispose {
             try {
@@ -152,7 +177,7 @@ fun CameraPreview(
                 factory = { previewView },
                 modifier = Modifier.fillMaxSize()
             )
-            
+
             Button(
                 onClick = {
                     takePhoto(context, imageCapture, cameraExecutor) { file ->
@@ -163,7 +188,7 @@ fun CameraPreview(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 32.dp)
             ) {
-                Text("Capture")
+                Text(stringResource(R.string.capture))
             }
         } else if (isCropping) {
             CropScreen(
@@ -179,21 +204,73 @@ fun CameraPreview(
                 file = capturedFile!!,
                 onCrop = {
                     isCropping = true
+                    detectionResult = null
                 },
-                onConfirmDetection = { result ->
-                    // Expected format: "Detected: Blue Mussel, California Mussel" or "No species detected."
-                    val species = if (result.startsWith("Detected: ")) {
-                        result.removePrefix("Detected: ").split(", ").firstOrNull() ?: ""
-                    } else {
-                        ""
+                onDetect = {
+                    scope.launch {
+                        isIdentifying = true
+                        val result = detectSpecies(context, capturedFile!!)
+                        detectionResult = result
+                        isIdentifying = false
+
+                        // Speak the result in the current language if enabled
+                        if (withContext(Dispatchers.IO) { repository.isTtsEnabled() }) {
+                            tts?.speak(result, TextToSpeech.QUEUE_FLUSH, null, null)
+                        }
                     }
-                    onSpeciesDetected(species)
                 },
                 onDiscard = {
                     capturedFile?.delete()
                     capturedFile = null
+                    detectionResult = null
+                    tts?.stop()
                 }
             )
+
+            detectionResult?.let { result ->
+                val detectedPrefix = stringResource(R.string.detected)
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 64.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shadowElevation = 4.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = result,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+
+        if (isIdentifying) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .pointerInput(Unit) {}, // Block touches during detection
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(color = Color.White)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        stringResource(R.string.identifying),
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
     }
 }
@@ -240,12 +317,12 @@ fun CropScreen(
                     .pointerInput(viewWidth, viewHeight) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
-                            
+
                             val handleSize = 40.dp.toPx()
                             val touchPoint = change.position
-                            
+
                             val isBottomRight = (touchPoint.x - cropRect.right).let { it * it } + (touchPoint.y - cropRect.bottom).let { it * it } < handleSize * handleSize
-                            
+
                             if (isBottomRight) {
                                 val newWidth = (cropRect.width + dragAmount.x).coerceIn(50f, viewWidth - cropRect.left)
                                 val newHeight = (cropRect.height + dragAmount.y).coerceIn(50f, viewHeight - cropRect.top)
@@ -266,7 +343,7 @@ fun CropScreen(
                     size = cropRect.size,
                     style = Stroke(width = 2.dp.toPx())
                 )
-                
+
                 // Draw a handle at the bottom right corner
                 drawCircle(
                     color = Color.White,
@@ -287,7 +364,7 @@ fun CropScreen(
                 onClick = onCancel,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
             Button(onClick = {
                 val croppedBitmap = Bitmap.createBitmap(
@@ -303,7 +380,7 @@ fun CropScreen(
                 }
                 onCropDone(croppedFile)
             }) {
-                Text("Confirm Crop")
+                Text(stringResource(R.string.confCrop))
             }
         }
     }
@@ -313,54 +390,21 @@ fun CropScreen(
 fun PhotoReviewScreen(
     file: File,
     onCrop: () -> Unit,
-    onConfirmDetection: (String) -> Unit = {},
+    onDetect: () -> Unit,
     onDiscard: () -> Unit
 ) {
     val bitmap = remember(file) {
         rotateBitmapIfRequired(file)
     }
-    var detectionResult by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    var isIdentifying by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         bitmap?.let {
             Image(
                 bitmap = it.asImageBitmap(),
-                contentDescription = "Captured Image",
+                contentDescription = stringResource(R.string.captImage),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit
             )
-        }
-
-        if (detectionResult != null) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 64.dp),
-                shape = RectangleShape,
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                shadowElevation = 4.dp
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = detectionResult!!,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (detectionResult!!.startsWith("Detected: ")) {
-                        Button(
-                            onClick = { onConfirmDetection(detectionResult!!) },
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        ) {
-                            Text("Log this catch")
-                        }
-                    }
-                }
-            }
         }
 
         Row(
@@ -374,43 +418,16 @@ fun PhotoReviewScreen(
                 onClick = onDiscard,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
-                Text("Discard")
+                Text(stringResource(R.string.discard))
             }
             Button(
                 onClick = { onCrop() },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
-                Text("Crop")
+                Text(stringResource(R.string.crop))
             }
-            Button(onClick = {
-                scope.launch {
-                    isIdentifying = true
-                    detectionResult = detectSpecies(context, file)
-                    isIdentifying = false
-                }
-            }) {
-                Text("Detect")
-            }
-        }
-
-        if (isIdentifying) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.6f))
-                    .pointerInput(Unit) {},
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = Color.White)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "Identifying...",
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+            Button(onClick = { onDetect() }) {
+                Text(stringResource(R.string.detect))
             }
         }
     }
@@ -423,12 +440,12 @@ private fun rotateBitmapIfRequired(file: File): Bitmap? {
     } catch (e: Exception) {
         return bitmap
     }
-    
+
     val orientation = exif.getAttributeInt(
         ExifInterface.TAG_ORIENTATION,
         ExifInterface.ORIENTATION_NORMAL
     )
-    
+
     val matrix = Matrix()
     when (orientation) {
         ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
@@ -436,7 +453,7 @@ private fun rotateBitmapIfRequired(file: File): Bitmap? {
         ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
         else -> return bitmap
     }
-    
+
     return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 }
 
@@ -448,7 +465,7 @@ private fun takePhoto(
 ) {
     val name = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.US)
         .format(System.currentTimeMillis())
-    
+
     // Save to cache directory first for review
     val photoFile = File(context.cacheDir, "$name.jpg")
 
@@ -463,7 +480,7 @@ private fun takePhoto(
             override fun onError(exc: ImageCaptureException) {
                 Log.e("CameraPreview", "Photo capture failed: ${exc.message}", exc)
                 ContextCompat.getMainExecutor(context).execute {
-                    Toast.makeText(context, "Capture failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.captFail), Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -479,11 +496,24 @@ private fun takePhoto(
 
 private suspend fun detectSpecies(context: Context, photoFile: File): String = withContext(Dispatchers.Default) {
     val speciesList = listOf(
-        "Blue Mussel", "Butter Clam", "California Mussel", "Geoduck",
-        "Littleneck Clam", "Manila Clam", "Northern Abalone", "Nuttall's Cockle",
-        "Olympia Oyster", "Horse Clam", "Pacific Oyster", "Pink Scallop",
-        "Purple Scallop", "Razor Clam", "Softshell Clam", "Spiny Scallop",
-        "Varnish Clam", "Weathervane Scallop"
+        context.getString(R.string.bm_name),
+        context.getString(R.string.bc_name),
+        context.getString(R.string.cm_name),
+        context.getString(R.string.g_name),
+        context.getString(R.string.lc_name),
+        context.getString(R.string.mc_name),
+        context.getString(R.string.na_name),
+        context.getString(R.string.nc_name),
+        context.getString(R.string.oo_name),
+        context.getString(R.string.hc_name),
+        context.getString(R.string.po_name),
+        context.getString(R.string.ps_name),
+        context.getString(R.string.rs_name),
+        context.getString(R.string.rc_name),
+        context.getString(R.string.sc_name),
+        context.getString(R.string.ss_name),
+        context.getString(R.string.vc_name),
+        context.getString(R.string.ws_name)
     )
 
     try {
@@ -495,13 +525,13 @@ private suspend fun detectSpecies(context: Context, photoFile: File): String = w
         // Model expects 416x416 based on error message
         val inputSize = 416
         val resizedBitmap = Bitmap.createScaledBitmap(bitmap, inputSize, inputSize, true)
-        
+
         val imgData = FloatBuffer.allocate(1 * 3 * inputSize * inputSize)
         imgData.rewind()
-        
+
         val pixels = IntArray(inputSize * inputSize)
         resizedBitmap.getPixels(pixels, 0, inputSize, 0, 0, inputSize, inputSize)
-        
+
         for (i in 0 until inputSize) {
             for (j in 0 until inputSize) {
                 val pixel = pixels[i * inputSize + j]
@@ -514,10 +544,10 @@ private suspend fun detectSpecies(context: Context, photoFile: File): String = w
 
         val inputName = session.inputNames.iterator().next()
         val inputTensor = OnnxTensor.createTensor(ortEnv, imgData, longArrayOf(1, 3, inputSize.toLong(), inputSize.toLong()))
-        
+
         val output = session.run(Collections.singletonMap(inputName, inputTensor))
         val resultContents = output.get(0).value as Array<Array<FloatArray>>
-        
+
         val numClasses = speciesList.size
         val resultTensor = resultContents[0]
         val numPredictions = resultTensor[0].size // Dynamically get number of predictions
@@ -543,11 +573,12 @@ private suspend fun detectSpecies(context: Context, photoFile: File): String = w
 
         session.close()
         ortEnv.close()
-        
+
         if (detectedSet.isEmpty()) {
-            "No species detected."
+            context.getString(R.string.noSpeciesDetected)
         } else {
-            "Detected: ${detectedSet.joinToString(", ")}"
+            val prefix = context.getString(R.string.detected)
+            "$prefix ${detectedSet.joinToString(", ")}"
         }
     } catch (e: Exception) {
         Log.e("Detection", "Error during inference", e)

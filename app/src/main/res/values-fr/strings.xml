@@ -104,6 +104,8 @@
     <string name="select_language">Choisir la langue</string>
     <string name="english">Anglais</string>
     <string name="french">Français</string>
+    <string name="tts_setting">Synthèse vocale (TTS)</string>
+    <string name="tts_description">Prononcer le nom des espèces détectées sur la page Caméra.</string>
     <string name="language_change_restart">L\'application doit redémarrer pour appliquer les changements de langue.</string>
     <string name="never">Jamais</string>
     <string name="offlineDownloadAttempt">Vous êtes hors ligne. Veuillez vous connecter à Internet pour télécharger la carte.</string>
@@ -184,6 +186,30 @@
     <string name="locationDefault">Par défaut, les coordonnées actuelles.</string>
     <string name="regWarning">Avertissement concernant la réglementation</string>
     <string name="addAnyway">Ajouter quand même</string>
+    <!-- Filter screen -->
+    <string name="clearFilter">Enlever le filtre</string>
+    <string name="noResults">Aucun résultat</string>
+    <string name="apply">Postuler</string>
+    <string name="harvest_closed_warning">La récolte de %1$s est actuellement FERMÉE dans cette zone (%2$s).</string>
+    <string name="daily_limit_exceeded_new">La limite quotidienne pour %1$s dans cette zone est de %2$d. Vous avez entré %3$d.</string>
+    <string name="daily_limit_exceeded_existing">La limite quotidienne pour %1$s dans cette zone est de %2$d. Vous avez déjà récolté %3$d aujourd\'hui, et cette entrée de %4$d dépasserait cette limite (Total : %5$d).</string>
+    <string name="aggregate_limit_exceeded_new">La limite globale quotidienne pour %1$s est de %2$d. Vous avez entré %3$d.</string>
+    <string name="aggregate_limit_exceeded_existing">La limite globale quotidienne pour %1$s est de %2$d. Vous avez déjà récolté %3$d aujourd\'hui pour ces espèces, et cette entrée de %4$d dépasserait cette limite (Total : %5$d).</string>
+    <string name="select_location">Choisir l\'emplacement</string>
+    <string name="close">Fermer</string>
+
+    <!-- Camera -->
+    <string name="noSpeciesDetected">Aucune espèce détectée.</string>
+    <string name="detected">Détectée:</string>
+    <string name="identifying">Identification…</string>
+    <string name="camPermsReq">L\'autorisation d\'accès à la caméra est requise pour utiliser cette fonctionnalité.</string>
+    <string name="confCrop">Confirmer recadrage</string>
+    <string name="captImage">Image prise</string>
+    <string name="discard">Jeter</string>
+    <string name="crop">Recadrer</string>
+    <string name="detect">Détecter</string>
+    <string name="captFail">Échec de la capture</string>
+    <string name="capture">Capturer</string>
 
     <!-- Tabs -->
     <string name="camera_label">Caméra</string>

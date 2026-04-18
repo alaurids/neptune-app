@@ -107,7 +107,7 @@ fun CatchTracking(
     val onActualSubmit = {
         scope.launch {
             val qInt = quantity.toIntOrNull() ?: 0
-            val warning = repository.getValidationWarning(species, qInt, location)
+            val warning = repository.getValidationWarning(species, qInt, location, time)
             if (warning != null && validationWarning == null) {
                 validationWarning = warning
                 showWarningDialog = true
@@ -333,7 +333,7 @@ fun CatchTracking(
                             shape = RoundedCornerShape(8.dp),
                             trailingIcon = {
                                 IconButton(onClick = { showMapPicker = true }) {
-                                    Icon(Icons.Default.MyLocation, contentDescription = "Select on Map")
+                                    Icon(Icons.Default.MyLocation, contentDescription = stringResource(R.string.select_location))
                                 }
                             }
                         )
@@ -436,6 +436,28 @@ fun CatchTracking(
                     }
 
                     // Controls
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(bottom = 16.dp, end = 16.dp)
+                    ) {
+                        FloatingActionButton(
+                            onClick = { scope.launch { mapView.setViewpointScale(scale = mapView.mapScale.value * 0.5) } },
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            containerColor = Color.White,
+                            contentColor = Color.Black
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Zoom In")
+                        }
+                        FloatingActionButton(
+                            onClick = { scope.launch { mapView.setViewpointScale(scale = mapView.mapScale.value * 2.0) } },
+                            containerColor = Color.White,
+                            contentColor = Color.Black
+                        ) {
+                            Icon(Icons.Default.Remove, contentDescription = "Zoom Out")
+                        }
+                    }
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -447,7 +469,7 @@ fun CatchTracking(
                             onClick = { showMapPicker = false },
                             modifier = Modifier.background(Color.White, RoundedCornerShape(8.dp))
                         ) {
-                            Icon(Icons.Default.Close, contentDescription = "Close")
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
                         }
 
                         Button(
@@ -462,7 +484,7 @@ fun CatchTracking(
                             },
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Select Location")
+                            Text(stringResource(R.string.select_location))
                         }
                     }
                 }

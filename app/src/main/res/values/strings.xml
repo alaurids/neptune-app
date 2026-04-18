@@ -104,6 +104,8 @@
     <string name="select_language">Select Language</string>
     <string name="english">English</string>
     <string name="french">French</string>
+    <string name="tts_setting">Text-to-Speech (TTS)</string>
+    <string name="tts_description">Speak the names of detected species on the Camera page.</string>
     <string name="language_change_restart">App needs to restart to apply language changes.</string>
     <string name="never">Never</string>
     <string name="offlineDownloadAttempt">You are offline. Please connect to the internet to download the map.</string>
@@ -184,9 +186,30 @@
     <string name="locationDefault">Defaults to current coordinates.</string>
     <string name="regWarning">Regulation Warning</string>
     <string name="addAnyway">Add anyway</string>
+    <!-- Filter screen -->
+    <string name="clearFilter">Clear Filter</string>
+    <string name="noResults">No Results</string>
+    <string name="apply">Apply</string>
+    <string name="harvest_closed_warning">Harvesting %1$s is currently CLOSED in this area (%2$s).</string>
+    <string name="daily_limit_exceeded_new">The daily limit for %1$s in this area is %2$d. You entered %3$d.</string>
+    <string name="daily_limit_exceeded_existing">The daily limit for %1$s in this area is %2$d. You have already harvested %3$d today, and this entry of %4$d would exceed that limit (Total: %5$d).</string>
+    <string name="aggregate_limit_exceeded_new">The daily aggregate limit for %1$s is %2$d. You entered %3$d.</string>
+    <string name="aggregate_limit_exceeded_existing">The daily aggregate limit for %1$s is %2$d. You have already harvested %3$d today across these species, and this entry of %4$d would exceed that limit (Total: %5$d).</string>
+    <string name="select_location">Select Location</string>
+    <string name="close">Close</string>
 
     <!-- Camera -->
-
+    <string name="noSpeciesDetected">No species detected.</string>
+    <string name="detected">Detected:</string>
+    <string name="identifying">Identifying…</string>
+    <string name="camPermsReq">Camera permission is required to use this feature.</string>
+    <string name="confCrop">Confirm Crop</string>
+    <string name="captImage">Captured Image</string>
+    <string name="discard">Discard</string>
+    <string name="crop">Crop</string>
+    <string name="detect">Detect</string>
+    <string name="captFail">Capture failed</string>
+    <string name="capture">Capture</string>
 
     <!-- Tab Names -->
     <string name="camera_label">Camera</string>

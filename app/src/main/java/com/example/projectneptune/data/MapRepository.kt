@@ -10,6 +10,7 @@ import com.arcgismaps.mapping.Basemap
 import com.arcgismaps.mapping.layers.ArcGISVectorTiledLayer
 import com.arcgismaps.tasks.exportvectortiles.ExportVectorTilesTask
 import com.arcgismaps.tasks.Job as ArcGISJob
+import com.example.projectneptune.R
 import java.io.File
 import com.example.projectneptune.isInternetAvailable
 import kotlinx.coroutines.*
@@ -92,6 +93,14 @@ class MapRepository(private val context: Context) {
 
     suspend fun updateTideDownloadDays(days: Int) {
         mapDao.insertMetadata(AppMetadata("tide_download_days", days.toString()))
+    }
+
+    suspend fun isTtsEnabled(): Boolean {
+        return mapDao.getMetadata("tts_enabled")?.toBoolean() ?: true
+    }
+
+    suspend fun updateTtsEnabled(enabled: Boolean) {
+        mapDao.insertMetadata(AppMetadata("tts_enabled", enabled.toString()))
     }
 
     suspend fun getCatchLimit(zoneId: String): CatchLimit? {
@@ -522,36 +531,50 @@ class MapRepository(private val context: Context) {
         return if (file.exists()) file.delete() else false
     }
 
-    suspend fun getValidationWarning(speciesName: String, quantity: Int, locationStr: String): String? {
+    suspend fun getValidationWarning(speciesName: String, quantity: Int, locationStr: String, timeStr: String): String? {
         val latLon = locationStr.split(",").map { it.trim().toDoubleOrNull() }
         if (latLon.size != 2 || latLon[0] == null || latLon[1] == null) return null
         
         val lat = latLon[0]!!
         val lon = latLon[1]!!
 
+        val resources = context.resources
+        
         // 1. Find the relevant regulation area (Layer20Feature)
         val allFeatures = _features.value
         if (allFeatures.isEmpty()) return null
 
         // Map species display name to internal property for closure checking
-        val speciesInternalName = when (speciesName.lowercase()) {
-            "butter clam" -> "butterClam"
-            "geoduck" -> "geoduckClam"
-            "horse clam" -> "horseClam"
-            "littleneck clam" -> "littleneckClam"
-            "manila clam" -> "manilaClam"
-            "nuttall's cockle", "nuttall\'s cockle" -> "nuttallsCockle"
-            "pacific razor clam", "razor clam" -> "pacificRazorClam"
-            "softshell clam" -> "softshellClam"
-            "varnish clam" -> "varnishClam"
-            "blue mussel" -> "blueMussel"
-            "california mussel" -> "californiaMussel"
-            "olympia oyster" -> "olympiaOyster"
-            "pacific oyster" -> "pacificOyster"
-            "pink scallop" -> "pinkScallop"
-            "spiny scallop" -> "spinyScallop"
-            "purple scallop" -> "purpleScallop"
-            "weathervane scallop" -> "weathervaneScallop"
+        // We need to check against both English and French names if the app supports both
+        val configEn = android.content.res.Configuration(resources.configuration).apply { setLocale(java.util.Locale.ENGLISH) }
+        val configFr = android.content.res.Configuration(resources.configuration).apply { setLocale(java.util.Locale.FRENCH) }
+        val resEn = context.createConfigurationContext(configEn).resources
+        val resFr = context.createConfigurationContext(configFr).resources
+
+        fun isMatch(id: Int, input: String): Boolean {
+            if (id == 0) return false
+            return resEn.getString(id).equals(input, ignoreCase = true) || 
+                   resFr.getString(id).equals(input, ignoreCase = true)
+        }
+
+        val speciesInternalName = when {
+            isMatch(R.string.bc_name, speciesName) -> "butterClam"
+            isMatch(R.string.g_name, speciesName) -> "geoduckClam"
+            isMatch(R.string.hc_name, speciesName) -> "horseClam"
+            isMatch(R.string.lc_name, speciesName) -> "littleneckClam"
+            isMatch(R.string.mc_name, speciesName) -> "manilaClam"
+            isMatch(R.string.nc_name, speciesName) -> "nuttallsCockle"
+            isMatch(R.string.rc_name, speciesName) || speciesName.lowercase().contains("razor clam") -> "pacificRazorClam"
+            isMatch(R.string.sc_name, speciesName) -> "softshellClam"
+            isMatch(R.string.vc_name, speciesName) -> "varnishClam"
+            isMatch(R.string.bm_name, speciesName) -> "blueMussel"
+            isMatch(R.string.cm_name, speciesName) -> "californiaMussel"
+            isMatch(R.string.oo_name, speciesName) -> "olympiaOyster"
+            isMatch(R.string.po_name, speciesName) -> "pacificOyster"
+            isMatch(R.string.ps_name, speciesName) -> "pinkScallop"
+            isMatch(R.string.ss_name, speciesName) -> "spinyScallop"
+            isMatch(R.string.rs_name, speciesName) || speciesName.lowercase().contains("purple hinge rock scallop") -> "purpleScallop"
+            isMatch(R.string.ws_name, speciesName) -> "weathervaneScallop"
             else -> null
         }
 
@@ -638,7 +661,9 @@ class MapRepository(private val context: Context) {
 
         // 3. Check if species is closed in this area
         if (speciesInternalName != null) {
-            if (isClosed(bestFeature)) return "Harvesting $speciesName is currently CLOSED in this area (${bestFeature.poNum})."
+            if (isClosed(bestFeature)) {
+                return resources.getString(R.string.harvest_closed_warning, speciesName, bestFeature.poNum)
+            }
         }
 
         // 4. Check daily limits
@@ -667,8 +692,90 @@ class MapRepository(private val context: Context) {
                 else -> 0
             }
             
-            if (limit > 0 && quantity > limit) {
-                return "The daily limit for $speciesName in this area is $limit. You entered $quantity."
+            if (limit > 0) {
+                // Check daily limits including previous entries for the same species today
+                val todayDate = try {
+                    val sdf = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+                    val parsedTime = SimpleDateFormat("MM/dd/yyyy hh:mm a z", Locale.getDefault()).parse(timeStr)
+                    if (parsedTime != null) sdf.format(parsedTime) else timeStr.split(" ").firstOrNull()
+                } catch (e: Exception) {
+                    timeStr.split(" ").firstOrNull()
+                }
+
+                val previousEntries = mapDao.getAllCatchEntries().filter { entry ->
+                    val entryDate = entry.time.split(" ").firstOrNull()
+                    val entrySpeciesMatch = isMatch(when(speciesInternalName) {
+                        "butterClam" -> R.string.bc_name
+                        "geoduckClam" -> R.string.g_name
+                        "horseClam" -> R.string.hc_name
+                        "littleneckClam" -> R.string.lc_name
+                        "manilaClam" -> R.string.mc_name
+                        "nuttallsCockle" -> R.string.nc_name
+                        "pacificRazorClam" -> R.string.rc_name
+                        "softshellClam" -> R.string.sc_name
+                        "varnishClam" -> R.string.vc_name
+                        "blueMussel" -> R.string.bm_name
+                        "californiaMussel" -> R.string.cm_name
+                        "olympiaOyster" -> R.string.oo_name
+                        "pacificOyster" -> R.string.po_name
+                        "pinkScallop" -> R.string.ps_name
+                        "spinyScallop" -> R.string.ss_name
+                        "purpleScallop" -> R.string.rs_name
+                        "weathervaneScallop" -> R.string.ws_name
+                        else -> 0
+                    }, entry.species)
+
+                    entrySpeciesMatch && entryDate == todayDate && entry.id != 0
+                }
+                
+                val totalHarvestedToday = previousEntries.sumOf { it.quantity.toIntOrNull() ?: 0 } + quantity
+                
+                if (totalHarvestedToday > limit) {
+                    return if (previousEntries.isEmpty()) {
+                        resources.getString(R.string.daily_limit_exceeded_new, speciesName, limit, quantity)
+                    } else {
+                        val alreadyHarvested = totalHarvestedToday - quantity
+                        resources.getString(R.string.daily_limit_exceeded_existing, speciesName, limit, alreadyHarvested, quantity, totalHarvestedToday)
+                    }
+                }
+
+                // 5. Group Limits
+                val groupInfo = when (speciesInternalName) {
+                    "butterClam", "horseClam", "littleneckClam", "manilaClam", "softshellClam", "varnishClam", "pacificRazorClam" ->
+                        Triple(resources.getString(R.string.allClams), limitObj.allClams, listOf(
+                            R.string.bc_name, R.string.hc_name, R.string.lc_name, R.string.mc_name, 
+                            R.string.sc_name, R.string.vc_name, R.string.rc_name
+                        ))
+                    "blueMussel", "californiaMussel" -> 
+                        Triple(resources.getString(R.string.allMussels), limitObj.allMussels, listOf(R.string.bm_name, R.string.cm_name))
+                    "pinkScallop", "spinyScallop" -> 
+                        Triple(resources.getString(R.string.pinkAndSpiny), limitObj.pinkAndSpiny, listOf(R.string.ps_name, R.string.ss_name))
+                    "purpleScallop", "weathervaneScallop" -> 
+                        Triple(resources.getString(R.string.purpleAndWeathervane), limitObj.purpleAndWeathervane, listOf(R.string.rs_name, R.string.ws_name))
+                    else -> null
+                }
+
+                if (groupInfo != null && groupInfo.second > 0) {
+                    val groupName = groupInfo.first
+                    val groupLimit = groupInfo.second
+                    val speciesIdsInGroup = groupInfo.third
+                    
+                    val previousGroupEntries = mapDao.getAllCatchEntries().filter { entry ->
+                        val entryDate = entry.time.split(" ").firstOrNull()
+                        entryDate == todayDate && entry.id != 0 && speciesIdsInGroup.any { isMatch(it, entry.species) }
+                    }
+                    
+                    val totalGroupHarvested = previousGroupEntries.sumOf { it.quantity.toIntOrNull() ?: 0 } + quantity
+                    
+                    if (totalGroupHarvested > groupLimit) {
+                        return if (previousGroupEntries.isEmpty() || (previousGroupEntries.size == 1 && isMatch(groupInfo.third.first(), previousGroupEntries[0].species))) {
+                             resources.getString(R.string.aggregate_limit_exceeded_new, groupName, groupLimit, quantity)
+                        } else {
+                            val alreadyHarvested = totalGroupHarvested - quantity
+                            resources.getString(R.string.aggregate_limit_exceeded_existing, groupName, groupLimit, alreadyHarvested, quantity, totalGroupHarvested)
+                        }
+                    }
+                }
             }
         }
 

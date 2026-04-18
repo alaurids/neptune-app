@@ -70,7 +70,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.*
 
 // Optimized data structure to avoid expensive re-parsing of JSON during map movements
 private data class PreparedFeature(

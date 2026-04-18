@@ -154,7 +154,8 @@ fun ProjectNeptuneApp(cameraExecutor: ExecutorService? = null) {
         } else {
             when (currentDestination) {
                 AppDestinations.CAMERA -> CameraDestination(
-                    cameraExecutor!!,
+                    repository = mapRepository,
+                    cameraExecutor = cameraExecutor!!,
                     onSpeciesDetected = { species ->
                         initialSpecies = species
                         initialQuantity = ""

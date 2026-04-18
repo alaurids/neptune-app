@@ -3,6 +3,8 @@ package com.example.projectneptune
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
@@ -159,6 +161,7 @@ fun SettingsDestination(
                 modifier = modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp)
             ) {
                 Text(
@@ -218,6 +221,45 @@ fun SettingsDestination(
                                 )
                             }
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // TTS Toggle
+                    var ttsEnabled by remember { mutableStateOf(true) }
+                    LaunchedEffect(Unit) {
+                        ttsEnabled = repository.isTtsEnabled()
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.tts_setting),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = stringResource(R.string.tts_description),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
+                        Switch(
+                            checked = ttsEnabled,
+                            onCheckedChange = { enabled ->
+                                ttsEnabled = enabled
+                                scope.launch {
+                                    repository.updateTtsEnabled(enabled)
+                                }
+                            }
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
